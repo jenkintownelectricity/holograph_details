@@ -56,14 +56,9 @@ A simple JSON description like "6-layer roofing assembly with EPDM membrane" is 
 
 ## Screenshots
 
-> *Screenshots coming soon*
+![POLR Holographic Viewer](./polr-holographic-viewer/screenshots/holographic-viewer-main.png)
 
-| View | Description |
-|------|-------------|
-| Main Interface | 3D viewport with control panels |
-| Expansion Joint | Cross-section with membrane detail |
-| Roofing Assembly | Parapet termination with coping |
-| Material Library | PBR material examples |
+*RF-002: Roof Edge Termination with Metal Coping - showing 3D view, layer stack, camera controls, and GCP product callouts*
 
 ---
 
