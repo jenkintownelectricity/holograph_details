@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { calculateCompressionRatio, validateSemanticDetail } from './schemas/semantic-detail';
 import { SemanticToMeshConverter } from './hologram/semantic-to-mesh';
-import { HolographicRenderer, DisplayMode, HolographicConfig } from './hologram/holographic-renderer';
+import { HolographicRenderer, DisplayMode, HolographicConfig, CameraViewName } from './hologram/holographic-renderer';
 import { SAMPLE_DETAILS, getDetailById } from './data/sample-details';
 import './styles/app.css';
 
@@ -117,11 +117,25 @@ export default function HologramApp() {
                 onClick={() => handleDisplayModeChange('standard-3d')}>3D View</button>
               <button className={`mode-btn ${displayMode === 'ar-webxr' ? 'active' : ''}`}
                 onClick={() => handleDisplayModeChange('ar-webxr')}
-                disabled={!xrSupport.ar} title={xrSupport.ar ? 'Enter AR' : 'AR not supported'}>AR Mode</button>
+                disabled={!xrSupport.ar}
+                title={xrSupport.ar ? 'Enter Augmented Reality mode' : 'AR requires WebXR-compatible browser and device (Quest, Vision Pro, etc.)'}>
+                AR Mode {!xrSupport.ar && <span className="mode-status">N/A</span>}
+              </button>
               <button className={`mode-btn ${displayMode === 'vr-webxr' ? 'active' : ''}`}
                 onClick={() => handleDisplayModeChange('vr-webxr')}
-                disabled={!xrSupport.vr} title={xrSupport.vr ? 'Enter VR' : 'VR not supported'}>VR Mode</button>
+                disabled={!xrSupport.vr}
+                title={xrSupport.vr ? 'Enter Virtual Reality mode' : 'VR requires WebXR-compatible browser and headset'}>
+                VR Mode {!xrSupport.vr && <span className="mode-status">N/A</span>}
+              </button>
+              <button className={`mode-btn ${displayMode === 'looking-glass' ? 'active' : ''}`}
+                onClick={() => handleDisplayModeChange('looking-glass')}
+                title="Looking Glass holographic display mode">
+                Looking Glass
+              </button>
             </div>
+            {(!xrSupport.ar && !xrSupport.vr) && (
+              <div className="xr-hint">WebXR requires compatible headset</div>
+            )}
           </section>
           
           <section className="panel-section">
@@ -137,8 +151,29 @@ export default function HologramApp() {
           </section>
           
           <section className="panel-section">
-            <h3 className="section-title"><span className="section-icon">◈</span>Camera</h3>
-            <button className="reset-btn" onClick={resetCamera}>Reset View</button>
+            <h3 className="section-title"><span className="section-icon">◈</span>Camera Views</h3>
+            <div className="camera-views-grid">
+              <button className="view-btn" onClick={() => renderer?.setCameraView('plan')} title="Plan View (Top)">Plan</button>
+              <button className="view-btn" onClick={() => renderer?.setCameraView('home')} title="Home View">Home</button>
+            </div>
+            <div className="camera-subsection">
+              <span className="subsection-label">Elevations</span>
+              <div className="camera-views-grid">
+                <button className="view-btn" onClick={() => renderer?.setCameraView('north')} title="North Elevation">N</button>
+                <button className="view-btn" onClick={() => renderer?.setCameraView('south')} title="South Elevation">S</button>
+                <button className="view-btn" onClick={() => renderer?.setCameraView('east')} title="East Elevation">E</button>
+                <button className="view-btn" onClick={() => renderer?.setCameraView('west')} title="West Elevation">W</button>
+              </div>
+            </div>
+            <div className="camera-subsection">
+              <span className="subsection-label">Isometric</span>
+              <div className="camera-views-grid">
+                <button className="view-btn" onClick={() => renderer?.setCameraView('isoNE')} title="Northeast Isometric">NE</button>
+                <button className="view-btn" onClick={() => renderer?.setCameraView('isoNW')} title="Northwest Isometric">NW</button>
+                <button className="view-btn" onClick={() => renderer?.setCameraView('isoSE')} title="Southeast Isometric">SE</button>
+                <button className="view-btn" onClick={() => renderer?.setCameraView('isoSW')} title="Southwest Isometric">SW</button>
+              </div>
+            </div>
           </section>
           
           <section className="panel-section products-section">

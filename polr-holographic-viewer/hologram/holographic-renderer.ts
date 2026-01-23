@@ -1,13 +1,17 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-export type DisplayMode = 
+export type DisplayMode =
   | 'standard-3d'      // Regular WebGL
   | 'looking-glass'    // Looking Glass Display
   | 'ar-webxr'         // WebXR AR Mode
   | 'vr-webxr'         // WebXR VR Mode
   | 'anaglyph'         // Red-Blue 3D glasses
   | 'side-by-side';    // For 3D monitors
+
+export type CameraViewName =
+  | 'plan' | 'north' | 'south' | 'east' | 'west'
+  | 'isoNE' | 'isoNW' | 'isoSE' | 'isoSW' | 'home';
 
 export interface HolographicConfig {
   displayMode: DisplayMode;
@@ -499,9 +503,88 @@ export class HolographicRenderer {
    * Reset camera to default position
    */
   resetCamera(): void {
-    this.camera.position.set(400, 300, 500);
-    this.controls.target.set(0, 100, 0);
-    this.controls.update();
+    this.animateCameraTo(
+      new THREE.Vector3(400, 300, 500),
+      new THREE.Vector3(0, 100, 0)
+    );
+  }
+
+  /**
+   * Camera view presets
+   */
+  static readonly CAMERA_VIEWS = {
+    // Plan view (top-down)
+    plan: { position: new THREE.Vector3(0, 500, 0), target: new THREE.Vector3(0, 0, 0) },
+    // Elevations
+    north: { position: new THREE.Vector3(0, 100, 500), target: new THREE.Vector3(0, 100, 0) },
+    south: { position: new THREE.Vector3(0, 100, -500), target: new THREE.Vector3(0, 100, 0) },
+    east: { position: new THREE.Vector3(500, 100, 0), target: new THREE.Vector3(0, 100, 0) },
+    west: { position: new THREE.Vector3(-500, 100, 0), target: new THREE.Vector3(0, 100, 0) },
+    // Isometric views
+    isoNE: { position: new THREE.Vector3(400, 300, 400), target: new THREE.Vector3(0, 100, 0) },
+    isoNW: { position: new THREE.Vector3(-400, 300, 400), target: new THREE.Vector3(0, 100, 0) },
+    isoSE: { position: new THREE.Vector3(400, 300, -400), target: new THREE.Vector3(0, 100, 0) },
+    isoSW: { position: new THREE.Vector3(-400, 300, -400), target: new THREE.Vector3(0, 100, 0) },
+    // Home/default
+    home: { position: new THREE.Vector3(400, 300, 500), target: new THREE.Vector3(0, 100, 0) }
+  };
+
+  /**
+   * Set camera to a predefined view with smooth animation
+   */
+  setCameraView(viewName: keyof typeof HolographicRenderer.CAMERA_VIEWS): void {
+    const view = HolographicRenderer.CAMERA_VIEWS[viewName];
+    if (view) {
+      this.animateCameraTo(view.position.clone(), view.target.clone());
+    }
+  }
+
+  /**
+   * Animate camera to a new position and target
+   */
+  private animateCameraTo(
+    targetPosition: THREE.Vector3,
+    targetLookAt: THREE.Vector3,
+    duration: number = 800
+  ): void {
+    const startPosition = this.camera.position.clone();
+    const startTarget = this.controls.target.clone();
+    const startTime = performance.now();
+
+    // Disable auto-rotate during animation
+    const wasAutoRotating = this.controls.autoRotate;
+    this.controls.autoRotate = false;
+
+    const animate = () => {
+      const elapsed = performance.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Ease out cubic for smooth deceleration
+      const eased = 1 - Math.pow(1 - progress, 3);
+
+      // Interpolate position
+      this.camera.position.lerpVectors(startPosition, targetPosition, eased);
+
+      // Interpolate target
+      this.controls.target.lerpVectors(startTarget, targetLookAt, eased);
+      this.controls.update();
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Restore auto-rotate setting
+        this.controls.autoRotate = wasAutoRotating;
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }
+
+  /**
+   * Get available camera view names
+   */
+  static getCameraViewNames(): string[] {
+    return Object.keys(HolographicRenderer.CAMERA_VIEWS);
   }
   
   private disposeGroup(group: THREE.Group): void {

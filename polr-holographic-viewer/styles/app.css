@@ -293,8 +293,25 @@ body {
 }
 
 .mode-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.5;
   cursor: not-allowed;
+}
+
+.mode-status {
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+.xr-hint {
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--text-dim);
+  text-align: center;
 }
 
 .toggle-list {
@@ -345,6 +362,60 @@ body {
   color: var(--cyan-primary);
 }
 
+/* Camera View Controls */
+.camera-views-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.camera-views-grid:last-child {
+  margin-bottom: 0;
+}
+
+.view-btn {
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.view-btn:hover {
+  border-color: var(--cyan-primary);
+  color: var(--cyan-primary);
+  background: var(--cyan-glow);
+}
+
+.view-btn:active {
+  transform: scale(0.98);
+}
+
+.camera-subsection {
+  margin-top: 10px;
+}
+
+.subsection-label {
+  display: block;
+  font-size: 9px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.camera-views-grid.four-col {
+  grid-template-columns: repeat(4, 1fr);
+}
+
 .products-list {
   display: flex;
   flex-direction: column;
@@ -388,22 +459,25 @@ body {
   position: relative;
   overflow: hidden;
   min-height: 0; /* Critical for flexbox to allow shrinking */
+  min-width: 0;  /* Also needed for flexbox */
+  display: flex;
+  flex-direction: column;
 }
 
 .hologram-viewport {
+  flex: 1;
   width: 100%;
   height: 100%;
   min-height: 400px;
   background: var(--bg-primary);
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: relative;
 }
 
 .hologram-viewport canvas {
-  display: block;
+  display: block !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
   width: 100% !important;
   height: 100% !important;
 }

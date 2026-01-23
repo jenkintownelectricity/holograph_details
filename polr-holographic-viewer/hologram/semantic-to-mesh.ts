@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { SemanticDetail } from '../schemas/semantic-detail';
-import { BASE_MATERIALS, BaseMaterial } from '../materials/base-materials';
+import { BASE_MATERIALS } from '../materials/base-materials';
 import { materialFactory } from '../materials/material-factory';
 
 /**
@@ -558,7 +558,7 @@ export class SemanticToMeshConverter {
   
   /**
    * Get or create material with caching
-   * Uses the material library when a matching base material exists
+   * Uses the universal material library for realistic PBR textures
    */
   private getMaterial(
     type: string,
@@ -578,22 +578,26 @@ export class SemanticToMeshConverter {
     // Try to find a matching base material from the library
     const baseMaterialId = this.mapTypeToBaseMaterial(type);
     if (baseMaterialId && BASE_MATERIALS[baseMaterialId]) {
-      const baseMaterial = BASE_MATERIALS[baseMaterialId];
-      const material = materialFactory.createMaterial(baseMaterial);
+      try {
+        const baseMaterial = BASE_MATERIALS[baseMaterialId];
+        const material = materialFactory.createMaterial(baseMaterial);
 
-      // Apply color override if provided
-      if (props.color) {
-        material.color = new THREE.Color(props.color);
+        // Apply color override if provided and different from base
+        if (props.color && props.color !== baseMaterial.color) {
+          material.color = new THREE.Color(props.color);
+        }
+
+        // Apply emissive if provided
+        if (props.emissive) {
+          material.emissive = new THREE.Color(props.emissive);
+          material.emissiveIntensity = 0.15;
+        }
+
+        this.materialCache.set(key, material);
+        return material;
+      } catch (e) {
+        console.warn(`[SemanticToMesh] Material factory error for ${type}, using fallback:`, e);
       }
-
-      // Apply emissive if provided
-      if (props.emissive) {
-        material.emissive = new THREE.Color(props.emissive);
-        material.emissiveIntensity = 0.15;
-      }
-
-      this.materialCache.set(key, material);
-      return material;
     }
 
     // Fallback to simple material creation
@@ -619,27 +623,39 @@ export class SemanticToMeshConverter {
    */
   private mapTypeToBaseMaterial(type: string): string | null {
     const typeMap: Record<string, string> = {
+      // Substrates
       'concrete': 'concrete-formed',
       'cmu': 'cmu-block',
       'steel': 'steel-structural',
       'wood': 'wood-framing',
+      'plywood': 'plywood-sheathing',
+      // Membranes
       'membrane': 'sbs-rubberized-asphalt',
       'membrane-sheet': 'sbs-rubberized-asphalt',
       'membrane-fluid': 'fluid-applied-rubber',
+      // Air/vapor barriers
       'air-barrier': 'sbs-rubberized-asphalt-orange',
+      'vapor-barrier': 'sbs-rubberized-asphalt',
+      // Insulation
       'insulation': 'polyiso-insulation',
       'insulation-rigid': 'polyiso-insulation',
+      'insulation-spray': 'fluid-applied-rubber',
+      // Protection & drainage
       'protection': 'protection-board-hdpe',
       'protection-board': 'protection-board-hdpe',
       'drainage': 'drainage-composite',
       'drainage-mat': 'drainage-composite',
+      // Sealants & accessories
       'sealant': 'sealant-polyurethane',
       'backer-rod': 'backer-rod',
+      // Metals & flashing
       'metal': 'metal-flashing',
       'flashing': 'metal-flashing',
       'flashing-metal': 'metal-flashing',
       'termination-bar': 'termination-bar',
+      // Primers
       'primer': 'primer-asphalt',
+      // Misc
       'gravel': 'drainage-composite',
       'cant-strip': 'polyiso-insulation'
     };
@@ -661,12 +677,5 @@ export class SemanticToMeshConverter {
   dispose(): void {
     this.materialCache.forEach(material => material.dispose());
     this.materialCache.clear();
-    // Note: materialFactory is a singleton, don't dispose it here
-    // as it may be used by other components
   }
 }
-
-/**
- * Re-export material library for convenience
- */
-export { BASE_MATERIALS, materialFactory } from '../materials';
