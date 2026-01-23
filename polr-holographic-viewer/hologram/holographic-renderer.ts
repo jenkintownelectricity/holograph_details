@@ -47,41 +47,56 @@ export class HolographicRenderer {
   constructor(container: HTMLElement, config: Partial<HolographicConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.clock = new THREE.Clock();
-    
+
     this.initRenderer(container);
     this.initScene();
     this.initCamera(container);
     this.initControls(container);
     this.initLighting();
-    
+
     if (this.config.scanLines) {
       this.initScanLines();
     }
-    
+
     this.handleResize(container);
     this.animate();
+
+    // DEBUG: Expose to window for console debugging
+    (window as any).scene = this.scene;
+    (window as any).camera = this.camera;
+    (window as any).renderer = this.renderer;
+    (window as any).holoRenderer = this;
+    console.log('[HoloRenderer] Debug globals exposed: window.scene, window.camera, window.renderer, window.holoRenderer');
   }
   
   private initRenderer(container: HTMLElement): void {
-    this.renderer = new THREE.WebGLRenderer({ 
-      antialias: true, 
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
       alpha: true,
       powerPreference: 'high-performance'
     });
-    
-    this.renderer.setSize(container.clientWidth, container.clientHeight);
+
+    // Use fallback dimensions if container not yet sized
+    const rect = container.getBoundingClientRect();
+    const width = rect.width || container.clientWidth || 800;
+    const height = rect.height || container.clientHeight || 600;
+
+    console.log('[HoloRenderer] initRenderer - size:', width, 'x', height);
+
+    this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.4;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    
+
     container.appendChild(this.renderer.domElement);
   }
   
   private initScene(): void {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(this.config.backgroundColor);
+    console.log('[HoloRenderer] Scene initialized with background:', this.config.backgroundColor);
     
     // Add fog for depth
     this.scene.fog = new THREE.FogExp2(this.config.backgroundColor, 0.0008);
@@ -225,86 +240,126 @@ export class HolographicRenderer {
   }
   
   private handleResize(container: HTMLElement): void {
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
+    const updateSize = (width: number, height: number) => {
+      if (width > 0 && height > 0) {
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(width, height);
+        console.log('[HoloRenderer] Resized to:', width, 'x', height);
+      }
+    };
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        updateSize(width, height);
       }
     });
     resizeObserver.observe(container);
+
+    // Also trigger resize after a short delay to catch initial layout
+    requestAnimationFrame(() => {
+      const rect = container.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        updateSize(rect.width, rect.height);
+      }
+    });
   }
   
   /**
    * Load a detail group into the scene
    */
   loadDetail(detailGroup: THREE.Group): void {
+    console.log('[HoloRenderer] loadDetail called with group:', detailGroup.name);
+    console.log('[HoloRenderer] Group children count:', detailGroup.children.length);
+
     // Remove existing detail
     if (this.detailGroup) {
       this.scene.remove(this.detailGroup);
       this.disposeGroup(this.detailGroup);
     }
-    
+
     this.detailGroup = detailGroup;
-    
+
     // Apply holographic effects
     if (this.config.holographicEffect) {
       this.applyHolographicEffects(detailGroup);
     }
-    
+
     // Center and scale
     this.centerAndScale(detailGroup);
-    
+
+    console.log('[HoloRenderer] After centerAndScale - position:', detailGroup.position);
+    console.log('[HoloRenderer] After centerAndScale - scale:', detailGroup.scale);
+
     this.scene.add(detailGroup);
+    console.log('[HoloRenderer] Added to scene. Total scene children:', this.scene.children.length);
   }
   
   private applyHolographicEffects(group: THREE.Group): void {
+    // Collect meshes first to avoid modifying during traversal
+    const meshes: THREE.Mesh[] = [];
     group.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        const material = child.material as THREE.MeshPhysicalMaterial;
-        
-        // Enhance emissive for glow
-        if (!material.emissive) {
-          material.emissive = new THREE.Color(material.color);
-        }
-        material.emissiveIntensity = this.config.glowIntensity;
-        
-        // Add slight transparency
-        material.transparent = true;
-        material.opacity = Math.min(material.opacity, 0.92);
-        
-        // Wireframe overlay
-        if (this.config.wireframeOverlay) {
-          const wireframeMat = new THREE.MeshBasicMaterial({
-            color: 0x00ffff,
-            wireframe: true,
-            transparent: true,
-            opacity: 0.08,
-            depthTest: true
-          });
-          const wireframe = new THREE.Mesh(child.geometry.clone(), wireframeMat);
-          wireframe.renderOrder = 1;
-          child.add(wireframe);
-        }
+      if (child instanceof THREE.Mesh && !child.userData.isWireframe) {
+        meshes.push(child);
       }
     });
+
+    for (const child of meshes) {
+      const material = child.material as THREE.MeshPhysicalMaterial;
+
+      // Enhance emissive for glow - check if property exists
+      if ('emissive' in material) {
+        if (!material.emissive) {
+          material.emissive = new THREE.Color(0x000000);
+        }
+        material.emissiveIntensity = this.config.glowIntensity;
+      }
+
+      // Add slight transparency
+      material.transparent = true;
+      material.opacity = Math.min(material.opacity ?? 1, 0.92);
+
+      // Wireframe overlay - only add if not already present
+      if (this.config.wireframeOverlay && !child.userData.hasWireframe) {
+        const wireframeMat = new THREE.MeshBasicMaterial({
+          color: 0x00ffff,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.08,
+          depthTest: true
+        });
+        const wireframe = new THREE.Mesh(child.geometry.clone(), wireframeMat);
+        wireframe.renderOrder = 1;
+        wireframe.userData.isWireframe = true;
+        child.add(wireframe);
+        child.userData.hasWireframe = true;
+      }
+    }
   }
   
   private centerAndScale(group: THREE.Group): void {
     const box = new THREE.Box3().setFromObject(group);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
-    
+
+    console.log('[HoloRenderer] BoundingBox - center:', center, 'size:', size);
+
+    // Check for invalid bounding box (empty group)
+    if (!isFinite(size.x) || !isFinite(size.y) || !isFinite(size.z) || size.length() === 0) {
+      console.error('[HoloRenderer] Invalid bounding box! Group may be empty.');
+      return;
+    }
+
     // Center the group
     group.position.sub(center);
     group.position.y += size.y / 2;
-    
+
     // Scale to fit nicely in view
     const maxDim = Math.max(size.x, size.y, size.z);
     const scale = 300 / maxDim;
     group.scale.setScalar(scale);
-    
+
     // Update controls target
     this.controls.target.set(0, size.y * scale / 2, 0);
   }
@@ -323,9 +378,9 @@ export class HolographicRenderer {
       const flicker = 0.96 + Math.random() * 0.08;
       
       this.detailGroup.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
+        if (child instanceof THREE.Mesh && !child.userData.isWireframe) {
           const mat = child.material as THREE.MeshPhysicalMaterial;
-          if (mat.emissiveIntensity !== undefined) {
+          if ('emissiveIntensity' in mat && mat.emissiveIntensity !== undefined) {
             mat.emissiveIntensity = this.config.glowIntensity * flicker;
           }
         }

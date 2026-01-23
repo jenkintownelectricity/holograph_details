@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { SemanticDetail } from '../schemas/semantic-detail';
+import { BASE_MATERIALS, BaseMaterial } from '../materials/base-materials';
+import { materialFactory } from '../materials/material-factory';
 
 /**
  * Converts semantic detail description to full 3D mesh
@@ -15,14 +17,18 @@ export class SemanticToMeshConverter {
   convert(detail: SemanticDetail): THREE.Group {
     const group = new THREE.Group();
     group.name = `detail-${detail.id}`;
-    
+
+    console.log('[SemanticToMesh] Converting detail:', detail.id, detail.category);
+
     // Get viewport dimensions or use defaults
     const viewport = detail.viewport || {
       width: 400,
       height: 300,
       depth: 150
     };
-    
+
+    console.log('[SemanticToMesh] Viewport:', viewport);
+
     // Build layer stack based on detail type
     switch (detail.category) {
       case 'expansion-joint':
@@ -46,7 +52,12 @@ export class SemanticToMeshConverter {
     
     // Add product labels
     this.addProductLabels(group, detail);
-    
+
+    console.log('[SemanticToMesh] Created group with', group.children.length, 'children');
+    group.children.forEach((child, i) => {
+      console.log(`  [${i}] ${child.name}:`, child.type);
+    });
+
     return group;
   }
   
@@ -547,24 +558,47 @@ export class SemanticToMeshConverter {
   
   /**
    * Get or create material with caching
+   * Uses the material library when a matching base material exists
    */
   private getMaterial(
-    type: string, 
-    props: { 
-      color?: string; 
-      roughness?: number; 
+    type: string,
+    props: {
+      color?: string;
+      roughness?: number;
       metallic?: number;
       emissive?: string;
     }
   ): THREE.Material {
     const key = `${type}-${props.color}-${props.roughness}-${props.metallic}`;
-    
+
     if (this.materialCache.has(key)) {
       return this.materialCache.get(key)!;
     }
-    
+
+    // Try to find a matching base material from the library
+    const baseMaterialId = this.mapTypeToBaseMaterial(type);
+    if (baseMaterialId && BASE_MATERIALS[baseMaterialId]) {
+      const baseMaterial = BASE_MATERIALS[baseMaterialId];
+      const material = materialFactory.createMaterial(baseMaterial);
+
+      // Apply color override if provided
+      if (props.color) {
+        material.color = new THREE.Color(props.color);
+      }
+
+      // Apply emissive if provided
+      if (props.emissive) {
+        material.emissive = new THREE.Color(props.emissive);
+        material.emissiveIntensity = 0.15;
+      }
+
+      this.materialCache.set(key, material);
+      return material;
+    }
+
+    // Fallback to simple material creation
     const color = new THREE.Color(props.color || '#808080');
-    
+
     const material = new THREE.MeshPhysicalMaterial({
       color,
       roughness: props.roughness ?? 0.5,
@@ -575,9 +609,42 @@ export class SemanticToMeshConverter {
       emissive: props.emissive ? new THREE.Color(props.emissive) : undefined,
       emissiveIntensity: props.emissive ? 0.15 : 0
     });
-    
+
     this.materialCache.set(key, material);
     return material;
+  }
+
+  /**
+   * Map legacy material type names to base material IDs
+   */
+  private mapTypeToBaseMaterial(type: string): string | null {
+    const typeMap: Record<string, string> = {
+      'concrete': 'concrete-formed',
+      'cmu': 'cmu-block',
+      'steel': 'steel-structural',
+      'wood': 'wood-framing',
+      'membrane': 'sbs-rubberized-asphalt',
+      'membrane-sheet': 'sbs-rubberized-asphalt',
+      'membrane-fluid': 'fluid-applied-rubber',
+      'air-barrier': 'sbs-rubberized-asphalt-orange',
+      'insulation': 'polyiso-insulation',
+      'insulation-rigid': 'polyiso-insulation',
+      'protection': 'protection-board-hdpe',
+      'protection-board': 'protection-board-hdpe',
+      'drainage': 'drainage-composite',
+      'drainage-mat': 'drainage-composite',
+      'sealant': 'sealant-polyurethane',
+      'backer-rod': 'backer-rod',
+      'metal': 'metal-flashing',
+      'flashing': 'metal-flashing',
+      'flashing-metal': 'metal-flashing',
+      'termination-bar': 'termination-bar',
+      'primer': 'primer-asphalt',
+      'gravel': 'drainage-composite',
+      'cant-strip': 'polyiso-insulation'
+    };
+
+    return typeMap[type.toLowerCase()] || null;
   }
   
   /**
@@ -594,5 +661,12 @@ export class SemanticToMeshConverter {
   dispose(): void {
     this.materialCache.forEach(material => material.dispose());
     this.materialCache.clear();
+    // Note: materialFactory is a singleton, don't dispose it here
+    // as it may be used by other components
   }
 }
+
+/**
+ * Re-export material library for convenience
+ */
+export { BASE_MATERIALS, materialFactory } from '../materials';
