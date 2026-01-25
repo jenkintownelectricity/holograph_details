@@ -1,17 +1,125 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { calculateCompressionRatio, validateSemanticDetail } from './schemas/semantic-detail';
+import { calculateCompressionRatio, validateSemanticDetail, SemanticDetail, SemanticLayer, SemanticConnection, MaterialType, DetailCategory, LayerPosition } from './schemas/semantic-detail';
 import { SemanticToMeshConverter } from './hologram/semantic-to-mesh';
 import { HolographicRenderer, DisplayMode, HolographicConfig, CameraViewName } from './hologram/holographic-renderer';
 import { SAMPLE_DETAILS, getDetailById } from './data/sample-details';
 import { ComparisonPanel } from './components/ComparisonPanel';
 import { LightingPanel, LightingPreset } from './components/LightingPanel';
+import { ZipUpload, Assembly, AssemblyLayer } from './components/ZipUpload';
 import './styles/app.css';
+
+// Convert uploaded Assembly (Construction DNA format) to SemanticDetail
+function assemblyToSemanticDetail(assembly: Assembly): SemanticDetail {
+  // Map common material codes to MaterialType
+  const materialMap: Record<string, MaterialType> = {
+    'DECK': 'concrete',
+    'CONC': 'concrete',
+    'CMU': 'cmu',
+    'STEEL': 'steel',
+    'WP': 'membrane-sheet',
+    'WP1': 'membrane-sheet',
+    'WP2': 'membrane-fluid',
+    'MEMBRANE': 'membrane-sheet',
+    'FLUID': 'membrane-fluid',
+    'INS': 'insulation-rigid',
+    'INSULATION': 'insulation-rigid',
+    'FLASH': 'flashing-metal',
+    'SEALANT': 'sealant',
+    'DRAINAGE': 'drainage-mat',
+    'PROTECTION': 'protection-board',
+    'PRIMER': 'primer',
+    'ADHESIVE': 'adhesive',
+    'AIR': 'air-barrier',
+    'VAPOR': 'vapor-barrier',
+  };
+
+  // Map position numbers to LayerPosition
+  const positionMap: Record<number, LayerPosition> = {
+    1: 'substrate',
+    2: 'primer',
+    3: 'membrane',
+    4: 'protection',
+    5: 'drainage',
+    6: 'insulation',
+    7: 'finish',
+  };
+
+  // Color palette for layers
+  const colors = ['#505050', '#3498db', '#2ecc71', '#e74c3c', '#9b59b6', '#f39c12', '#1abc9c', '#e67e22'];
+
+  const layers: SemanticLayer[] = assembly.layers.map((layer, idx) => {
+    const code = layer.code.toUpperCase();
+    const material = Object.entries(materialMap).find(([key]) => code.includes(key))?.[1] || 'concrete';
+    const position = positionMap[layer.position] || 'membrane';
+    const thickness = layer.thickness?.nominal ?
+      (layer.thickness.unit === 'in' ? layer.thickness.nominal * 25.4 : layer.thickness.nominal) :
+      10;
+
+    return {
+      id: `layer-${layer.position}`,
+      material,
+      thickness,
+      position,
+      properties: {
+        color: colors[idx % colors.length],
+        opacity: 0.9,
+      },
+      annotation: layer.name,
+    };
+  });
+
+  // Create connections between adjacent layers
+  const connections: SemanticConnection[] = [];
+  for (let i = 0; i < layers.length - 1; i++) {
+    connections.push({
+      type: 'overlap',
+      from: layers[i].id,
+      to: layers[i + 1].id,
+      method: 'adhesive',
+    });
+  }
+
+  // Determine category from assembly name/id
+  let category: DetailCategory = 'waterproofing';
+  const nameLower = (assembly.name + assembly.id).toLowerCase();
+  if (nameLower.includes('roof')) category = 'roofing';
+  else if (nameLower.includes('wall')) category = 'wall-assembly';
+  else if (nameLower.includes('foundation')) category = 'foundation';
+  else if (nameLower.includes('flash')) category = 'flashing';
+  else if (nameLower.includes('expansion') || nameLower.includes('joint')) category = 'expansion-joint';
+  else if (nameLower.includes('penetration')) category = 'penetration';
+  else if (nameLower.includes('air')) category = 'air-barrier';
+
+  return {
+    id: assembly.id,
+    category,
+    name: assembly.name,
+    description: assembly.description,
+    parameters: {
+      wallThickness: 200,
+      jointWidth: 25,
+    },
+    viewport: {
+      width: 500,
+      height: 400,
+      depth: 300,
+      cameraAngle: 'isometric',
+    },
+    layers,
+    connections,
+    products: [],
+    version: '1.0',
+    source: {
+      author: 'ROOFIO Assembly Builder',
+    },
+  };
+}
 
 export default function HologramApp() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [renderer, setRenderer] = useState<HolographicRenderer | null>(null);
   const converter = useMemo(() => new SemanticToMeshConverter(), []);
-  
+
   const [selectedDetailId, setSelectedDetailId] = useState<string>(SAMPLE_DETAILS[0].id);
   const [displayMode, setDisplayMode] = useState<DisplayMode>('standard-3d');
   const [config, setConfig] = useState<Partial<HolographicConfig>>({
@@ -21,15 +129,40 @@ export default function HologramApp() {
     scanLines: true,
     glowIntensity: 0.15
   });
-  
+
   const [xrSupport, setXrSupport] = useState({ ar: false, vr: false });
   const [showSemanticPanel, setShowSemanticPanel] = useState(true);
   const [lightingPreset, setLightingPreset] = useState<LightingPreset>('studio');
+
+  // Uploaded assembly state
+  const [uploadedAssemblies, setUploadedAssemblies] = useState<Assembly[]>([]);
+  const [uploadedDetails, setUploadedDetails] = useState<SemanticDetail[]>([]);
   
-  const selectedDetail = useMemo(() => 
-    getDetailById(selectedDetailId) || SAMPLE_DETAILS[0],
-    [selectedDetailId]
+  // Combine sample details with uploaded details
+  const allDetails = useMemo(() =>
+    [...SAMPLE_DETAILS, ...uploadedDetails],
+    [uploadedDetails]
   );
+
+  const selectedDetail = useMemo(() => {
+    // First check uploaded details
+    const uploaded = uploadedDetails.find(d => d.id === selectedDetailId);
+    if (uploaded) return uploaded;
+    // Then check sample details
+    return getDetailById(selectedDetailId) || SAMPLE_DETAILS[0];
+  }, [selectedDetailId, uploadedDetails]);
+
+  // Handle uploaded assemblies
+  const handleAssembliesLoaded = (assemblies: Assembly[]) => {
+    setUploadedAssemblies(assemblies);
+    // Convert assemblies to SemanticDetail format
+    const converted = assemblies.map(assemblyToSemanticDetail);
+    setUploadedDetails(converted);
+    // Select the first uploaded assembly
+    if (converted.length > 0) {
+      setSelectedDetailId(converted[0].id);
+    }
+  };
   
   const compressionStats = useMemo(() => 
     calculateCompressionRatio(selectedDetail),
@@ -111,14 +244,23 @@ export default function HologramApp() {
         <aside className="controls-panel">
           <section className="panel-section">
             <h3 className="section-title"><span className="section-icon">◈</span>Detail Selection</h3>
-            <select 
+            <select
               className="detail-select"
               value={selectedDetailId}
               onChange={(e) => setSelectedDetailId(e.target.value)}
             >
-              {SAMPLE_DETAILS.map(d => (
-                <option key={d.id} value={d.id}>{d.id}: {d.name}</option>
-              ))}
+              {uploadedDetails.length > 0 && (
+                <optgroup label="Uploaded Assemblies">
+                  {uploadedDetails.map(d => (
+                    <option key={d.id} value={d.id}>📦 {d.name}</option>
+                  ))}
+                </optgroup>
+              )}
+              <optgroup label="Sample Details">
+                {SAMPLE_DETAILS.map(d => (
+                  <option key={d.id} value={d.id}>{d.id}: {d.name}</option>
+                ))}
+              </optgroup>
             </select>
             <div className="category-badge">{selectedDetail.category.replace('-', ' ').toUpperCase()}</div>
           </section>
@@ -239,6 +381,10 @@ export default function HologramApp() {
           <div className="controls-hint">
             <span>🖱️ Drag to rotate</span><span>⚲ Scroll to zoom</span><span>⇧+Drag to pan</span>
           </div>
+          <ZipUpload
+            onAssembliesLoaded={handleAssembliesLoaded}
+            onError={(error) => console.error('Upload error:', error)}
+          />
         </main>
         
         {showSemanticPanel && (
