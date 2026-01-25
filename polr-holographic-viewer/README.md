@@ -74,28 +74,105 @@ Compression: 2,500:1 to 5,600:1 ratio
 # Install dependencies
 npm install
 
-# Development server
+# Development server (frontend only)
 npm run dev
+
+# Development server (frontend + backend upload server)
+npm run dev:all
 
 # Production build
 npm run build
+
+# Run tests
+npm run test
+
+# Type check
+npm run type-check
+```
+
+## Integrated Modules (L0-CMD-2026-0125-001)
+
+This version integrates the POLR Strategic Development modules:
+
+| Module | Location | Description |
+|--------|----------|-------------|
+| AI Texture Generator | `materials/ai-texture-generator.ts` | Scenario AI integration for photorealistic textures |
+| Texture Library | `materials/texture-library.ts` | 25+ procedural/hybrid textures |
+| Realistic Details | `geometry/realistic-details.ts` | Fasteners, sealants, termination bars, stress plates |
+| Lighting Setup | `rendering/lighting-setup.ts` | 5 lighting presets (studio, outdoor, etc.) |
+| Post-Processing | `rendering/post-processing.ts` | SSAO, bloom, SMAA, color correction |
+| OR-Equal Comparison | `features/or-equal-comparison.ts` | Manufacturer equivalency engine |
+| Spec Integration | `features/spec-integration.ts` | CSI 3-part specification generation |
+| Embeddable Widget | `embed/widget.ts` | Third-party website integration |
+| REST API | `api/routes.ts` | Programmatic access endpoints |
+
+### Using the Demo Component
+
+```tsx
+import { ManufacturerComparison } from './demos';
+
+// In your component:
+<ManufacturerComparison
+  onCompare={({ mfr1, mfr2, mode }) => {
+    console.log(`Comparing ${mfr1} vs ${mfr2} in ${mode} mode`);
+  }}
+/>
 ```
 
 ## Project Structure
 
 ```
-src/
+polr-holographic-viewer/
 ├── schemas/
-│   └── semantic-detail.ts    # Core semantic compression schema
+│   └── semantic-detail.ts        # Core semantic compression schema
 ├── data/
-│   └── sample-details.ts     # Sample construction details
+│   └── sample-details.ts         # Sample construction details
 ├── hologram/
-│   ├── semantic-to-mesh.ts   # 3D mesh generator
-│   └── holographic-renderer.ts # WebGL renderer with effects
+│   ├── semantic-to-mesh.ts       # 3D mesh generator
+│   └── holographic-renderer.ts   # WebGL renderer with effects
+├── materials/
+│   ├── index.ts                  # Barrel export
+│   ├── base-materials.ts         # Core material definitions
+│   ├── manufacturers.ts          # Manufacturer product mappings
+│   ├── material-factory.ts       # PBR material generator
+│   ├── texture-library.ts        # Hybrid texture system
+│   └── ai-texture-generator.ts   # AI-assisted texture generation
+├── geometry/
+│   ├── index.ts                  # Barrel export
+│   └── realistic-details.ts      # Fasteners, sealants, termination bars
+├── rendering/
+│   ├── index.ts                  # Barrel export
+│   ├── lighting-setup.ts         # 5 lighting presets
+│   └── post-processing.ts        # SSAO, bloom, SMAA
+├── features/
+│   ├── index.ts                  # Barrel export
+│   ├── or-equal-comparison.ts    # Manufacturer equivalency system
+│   └── spec-integration.ts       # CSI specification generation
+├── embed/
+│   ├── index.ts                  # Barrel export
+│   └── widget.ts                 # Embeddable viewer widget
+├── api/
+│   ├── index.ts                  # Barrel export
+│   └── routes.ts                 # REST API definitions
+├── components/
+│   ├── ComparisonPanel.tsx       # OR-Equal UI component
+│   ├── LightingPanel.tsx         # Lighting preset selector
+│   └── ZipUpload.tsx             # Assembly upload component
+├── demos/
+│   ├── index.ts                  # Barrel export
+│   └── ManufacturerComparison.tsx # Demo: Compare manufacturers
+├── server/
+│   ├── index.ts                  # Express upload server
+│   └── zip-processor.ts          # Assembly extraction
+├── tests/
+│   ├── features.test.ts          # OR-Equal comparison tests
+│   ├── geometry.test.ts          # Geometry generation tests
+│   └── materials.test.ts         # Texture library tests
 ├── styles/
-│   └── app.css               # Futuristic dark theme
-├── App.tsx                   # Main React application
-└── main.tsx                  # Entry point
+│   └── app.css                   # Futuristic dark theme
+├── App.tsx                       # Main React application
+├── main.tsx                      # Entry point
+└── vitest.config.ts              # Test configuration
 ```
 
 ## Architecture
