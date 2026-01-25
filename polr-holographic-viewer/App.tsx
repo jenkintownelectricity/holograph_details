@@ -405,6 +405,7 @@ export default function HologramApp() {
             <>
               {comparison.mode === 'side-by-side' && (
                 <ComparisonSideBySide
+                  detail={selectedDetail}
                   manufacturerA={comparison.manufacturers[0]}
                   manufacturerB={comparison.manufacturers[1]}
                   differenceReport={comparison.differenceReport}
@@ -413,6 +414,7 @@ export default function HologramApp() {
               )}
               {comparison.mode === 'slider' && (
                 <ComparisonSlider
+                  detail={selectedDetail}
                   manufacturerA={comparison.manufacturers[0]}
                   manufacturerB={comparison.manufacturers[1]}
                   differenceReport={comparison.differenceReport}

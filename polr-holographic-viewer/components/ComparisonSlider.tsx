@@ -1,14 +1,17 @@
 /**
  * Slider Comparison Component
- * L0-CMD-2026-0125-003 Phase A3
+ * L0-CMD-2026-0125-004 Phase A3
  *
- * Draggable slider to reveal both manufacturer variants
+ * Draggable slider to reveal both manufacturer variants with clipping planes
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { SliderSceneManager } from '../utils/dualRenderer';
 import { DifferenceReport } from '../features/or-equal-comparison';
+import { SemanticDetail } from '../schemas/semantic-detail';
 
 interface Props {
+  detail: SemanticDetail;
   manufacturerA: string;
   manufacturerB: string;
   differenceReport: DifferenceReport | null;
@@ -18,6 +21,7 @@ interface Props {
 }
 
 export function ComparisonSlider({
+  detail,
   manufacturerA,
   manufacturerB,
   differenceReport,
@@ -27,6 +31,31 @@ export function ComparisonSlider({
 }: Props) {
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const managerRef = useRef<SliderSceneManager | null>(null);
+
+  // Initialize scene manager
+  useEffect(() => {
+    if (!viewportRef.current) return;
+
+    // Create slider scene manager
+    managerRef.current = new SliderSceneManager(viewportRef.current, {
+      backgroundColor: 0x050510
+    });
+
+    // Load the detail with both manufacturers
+    managerRef.current.loadDetails(detail, manufacturerA, manufacturerB);
+
+    return () => {
+      managerRef.current?.dispose();
+      managerRef.current = null;
+    };
+  }, [detail, manufacturerA, manufacturerB]);
+
+  // Update slider position in 3D scene
+  useEffect(() => {
+    managerRef.current?.updateSliderPosition(sliderPosition);
+  }, [sliderPosition]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -84,37 +113,44 @@ export function ComparisonSlider({
         </button>
       </div>
 
-      <div className="slider-labels">
-        <div
-          className="slider-label left"
-          style={{ opacity: 1 - sliderPosition * 0.5 }}
-        >
-          <span className="label-badge">A</span>
-          <span className="label-name">{manufacturerA}</span>
-        </div>
-        <div
-          className="slider-label right"
-          style={{ opacity: 0.5 + sliderPosition * 0.5 }}
-        >
-          <span className="label-badge">B</span>
-          <span className="label-name">{manufacturerB}</span>
-        </div>
-      </div>
+      <div className="slider-viewport-container">
+        {/* The 3D viewport */}
+        <div ref={viewportRef} className="slider-viewport" />
 
-      <div
-        className="slider-track"
-        style={{ left: `${sliderPercentage}%` }}
-        onMouseDown={handleMouseDown}
-        onTouchStart={() => setIsDragging(true)}
-      >
-        <div className="slider-handle">
-          <div className="slider-grip">
-            <span className="grip-line" />
-            <span className="grip-line" />
-            <span className="grip-line" />
+        {/* Labels at edges */}
+        <div className="slider-labels">
+          <div
+            className="slider-label left"
+            style={{ opacity: 1 - sliderPosition * 0.5 }}
+          >
+            <span className="label-badge">A</span>
+            <span className="label-name">{manufacturerA}</span>
+          </div>
+          <div
+            className="slider-label right"
+            style={{ opacity: 0.5 + sliderPosition * 0.5 }}
+          >
+            <span className="label-badge">B</span>
+            <span className="label-name">{manufacturerB}</span>
           </div>
         </div>
-        <div className="slider-line" />
+
+        {/* Slider track and handle */}
+        <div
+          className="slider-track"
+          style={{ left: `${sliderPercentage}%` }}
+          onMouseDown={handleMouseDown}
+          onTouchStart={() => setIsDragging(true)}
+        >
+          <div className="slider-handle">
+            <div className="slider-grip">
+              <span className="grip-line" />
+              <span className="grip-line" />
+              <span className="grip-line" />
+            </div>
+          </div>
+          <div className="slider-line" />
+        </div>
       </div>
 
       {differenceReport && (
@@ -129,7 +165,7 @@ export function ComparisonSlider({
       )}
 
       <div className="comparison-hint">
-        <span>Drag slider to reveal • {sliderPercentage.toFixed(0)}%</span>
+        <span>Drag slider to reveal • {sliderPercentage.toFixed(0)}% • Drag viewport to rotate</span>
       </div>
     </div>
   );

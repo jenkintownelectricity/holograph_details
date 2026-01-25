@@ -8,6 +8,7 @@
  */
 
 import * as THREE from 'three';
+import { resolveMaterialType } from '../data/layer-material-mapping';
 
 // =============================================================================
 // TYPE DEFINITIONS
@@ -468,23 +469,38 @@ export class OrEqualComparison {
 
   /**
    * Generate difference report between manufacturers
+   * Uses resolveMaterialType to compute materialType when not directly available on layer
    */
-  getDifferenceReport(detail: SemanticDetail, mfr1: string, mfr2: string): DifferenceReport {
+  getDifferenceReport(detail: SemanticDetail | any, mfr1: string, mfr2: string): DifferenceReport {
     const productChanges: ProductChange[] = [];
     const warnings: string[] = [];
 
-    detail.layers.forEach(layer => {
-      const equivalents = PRODUCT_EQUIVALENCIES[layer.materialType];
+    detail.layers.forEach((layer: any) => {
+      // Resolve materialType - try layer.materialType first, then use resolver
+      let materialType = layer.materialType;
+      if (!materialType) {
+        // Use the resolver to compute materialType from layer properties
+        const material = typeof layer.material === 'string' ? layer.material : layer.material?.type || '';
+        materialType = resolveMaterialType(layer.id, material, layer.annotation);
+      }
+
+      if (!materialType) {
+        // Skip layers we can't resolve (substrates, structural elements, etc.)
+        console.log(`[OrEqualComparison] Skipping layer without materialType: ${layer.id}`);
+        return;
+      }
+
+      const equivalents = PRODUCT_EQUIVALENCIES[materialType];
       if (!equivalents) {
-        warnings.push(`No equivalency data for: ${layer.materialType}`);
+        warnings.push(`No equivalency data for: ${materialType} (layer: ${layer.id})`);
         return;
       }
 
       const p1 = equivalents.products.find(p => p.manufacturer === mfr1);
       const p2 = equivalents.products.find(p => p.manufacturer === mfr2);
 
-      if (!p1) { warnings.push(`${mfr1} has no product for ${layer.materialType}`); return; }
-      if (!p2) { warnings.push(`${mfr2} has no product for ${layer.materialType}`); return; }
+      if (!p1) { warnings.push(`${mfr1} has no product for ${materialType}`); return; }
+      if (!p2) { warnings.push(`${mfr2} has no product for ${materialType}`); return; }
 
       const change: ProductChange = {
         layerId: layer.id,
