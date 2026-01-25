@@ -51,6 +51,9 @@ export const PRODUCT_EQUIVALENCIES: Record<string, {
   baseType: string;
   products: Array<{ manufacturer: string; product: string; thickness?: number; confidenceScore: number }>;
 }> = {
+  // ==========================================================================
+  // WATERPROOFING MEMBRANES (Original)
+  // ==========================================================================
   'membrane-self-adhered-waterproofing': {
     baseType: 'Self-Adhered Waterproofing Membrane',
     products: [
@@ -71,29 +74,291 @@ export const PRODUCT_EQUIVALENCIES: Record<string, {
       { manufacturer: 'Tremco', product: 'ExoAir 120', thickness: 1.0, confidenceScore: 0.90 }
     ]
   },
-  'membrane-tpo-roofing': {
-    baseType: 'TPO Roofing Membrane',
-    products: [
-      { manufacturer: 'Carlisle SynTec', product: 'Sure-Weld TPO', thickness: 1.5, confidenceScore: 1.0 },
-      { manufacturer: 'GAF', product: 'EverGuard TPO', thickness: 1.5, confidenceScore: 0.96 },
-      { manufacturer: 'Firestone', product: 'UltraPly TPO', thickness: 1.5, confidenceScore: 0.95 },
-      { manufacturer: 'Johns Manville', product: 'TPO RB', thickness: 1.5, confidenceScore: 0.94 }
-    ]
-  },
-  'insulation-xps': {
-    baseType: 'Extruded Polystyrene Insulation',
-    products: [
-      { manufacturer: 'Owens Corning', product: 'FOAMULAR', confidenceScore: 1.0 },
-      { manufacturer: 'DuPont (DOW)', product: 'STYROFOAM', confidenceScore: 0.98 },
-      { manufacturer: 'Kingspan', product: 'GreenGuard XPS', confidenceScore: 0.95 }
-    ]
-  },
   'drainage-composite': {
     baseType: 'Drainage Composite Board',
     products: [
       { manufacturer: 'GCP Applied Technologies', product: 'HYDRODUCT', confidenceScore: 1.0 },
       { manufacturer: 'Carlisle CCW', product: 'CCW MIRADRAIN', confidenceScore: 0.95 },
       { manufacturer: 'W.R. Meadows', product: 'MEADOW-DRAIN', confidenceScore: 0.93 }
+    ]
+  },
+
+  // ==========================================================================
+  // TPO MEMBRANES (Expanded from CSV L0-CMD-2026-0125-002)
+  // ==========================================================================
+  'membrane-tpo': {
+    baseType: 'TPO Roofing Membrane',
+    products: [
+      { manufacturer: 'Carlisle SynTec', product: 'Sure-Weld TPO', thickness: 1.5, confidenceScore: 1.0 },
+      { manufacturer: 'Johns Manville', product: 'TPO Roofing Systems', thickness: 1.5, confidenceScore: 0.96 },
+      { manufacturer: 'Versico', product: '16-foot TPO', thickness: 1.5, confidenceScore: 0.95 },
+      { manufacturer: 'Duro-Last', product: 'Duro-TECH TPO', thickness: 1.5, confidenceScore: 0.94 },
+      { manufacturer: 'Duro-Last', product: 'Duro-TECH Fleece TPO', thickness: 1.5, confidenceScore: 0.93 },
+      { manufacturer: 'GAF', product: 'EverGuard TPO', thickness: 1.5, confidenceScore: 0.92 },
+      { manufacturer: 'Firestone', product: 'UltraPly TPO', thickness: 1.5, confidenceScore: 0.91 }
+    ]
+  },
+  // Legacy key for backwards compatibility
+  'membrane-tpo-roofing': {
+    baseType: 'TPO Roofing Membrane',
+    products: [
+      { manufacturer: 'Carlisle SynTec', product: 'Sure-Weld TPO', thickness: 1.5, confidenceScore: 1.0 },
+      { manufacturer: 'Johns Manville', product: 'TPO Roofing Systems', thickness: 1.5, confidenceScore: 0.96 },
+      { manufacturer: 'Versico', product: '16-foot TPO', thickness: 1.5, confidenceScore: 0.95 },
+      { manufacturer: 'Duro-Last', product: 'Duro-TECH TPO', thickness: 1.5, confidenceScore: 0.94 }
+    ]
+  },
+
+  // ==========================================================================
+  // EPDM MEMBRANES (From CSV)
+  // ==========================================================================
+  'membrane-epdm': {
+    baseType: 'EPDM Roofing Membrane',
+    products: [
+      { manufacturer: 'Carlisle SynTec', product: 'EPDM', thickness: 1.5, confidenceScore: 1.0 },
+      { manufacturer: 'Johns Manville', product: 'EPDM Roofing Systems', thickness: 1.5, confidenceScore: 0.96 },
+      { manufacturer: 'Firestone', product: 'RubberGard EPDM', thickness: 1.5, confidenceScore: 0.95 },
+      { manufacturer: 'GenFlex', product: 'EPDM Membrane', thickness: 1.5, confidenceScore: 0.92 }
+    ]
+  },
+
+  // ==========================================================================
+  // PVC MEMBRANES (From CSV)
+  // ==========================================================================
+  'membrane-pvc': {
+    baseType: 'PVC Roofing Membrane',
+    products: [
+      { manufacturer: 'Johns Manville', product: 'PVC Roofing Systems', thickness: 1.5, confidenceScore: 1.0 },
+      { manufacturer: 'Duro-Last', product: 'Duro-Last Membrane', thickness: 1.5, confidenceScore: 0.96 },
+      { manufacturer: 'Sarnafil', product: 'Sarnafil PVC', thickness: 1.5, confidenceScore: 0.94 },
+      { manufacturer: 'IB Roof Systems', product: 'IB PVC Membrane', thickness: 1.5, confidenceScore: 0.92 }
+    ]
+  },
+
+  // ==========================================================================
+  // MODIFIED BITUMEN MEMBRANES (From CSV)
+  // ==========================================================================
+  'membrane-mod-bit': {
+    baseType: 'Modified Bitumen Roofing Membrane',
+    products: [
+      { manufacturer: 'SOPREMA', product: 'SBS-Modified Bitumen', thickness: 4.0, confidenceScore: 1.0 },
+      { manufacturer: 'Polyglass', product: 'Modified Bitumen Membranes', thickness: 4.0, confidenceScore: 0.96 },
+      { manufacturer: 'Polyglass', product: 'SBS Membranes', thickness: 4.0, confidenceScore: 0.95 },
+      { manufacturer: 'Polyglass', product: 'APP Membranes', thickness: 4.0, confidenceScore: 0.94 },
+      { manufacturer: 'GAF', product: 'Liberty SBS', thickness: 4.0, confidenceScore: 0.93 },
+      { manufacturer: 'CertainTeed', product: 'Flintlastic SA', thickness: 4.0, confidenceScore: 0.92 }
+    ]
+  },
+
+  // ==========================================================================
+  // FLEECE-BACKED MEMBRANES (From CSV)
+  // ==========================================================================
+  'membrane-fleece': {
+    baseType: 'Fleece-Backed Roofing Membrane',
+    products: [
+      { manufacturer: 'Carlisle SynTec', product: 'FleeceBACK', thickness: 2.0, confidenceScore: 1.0 },
+      { manufacturer: 'Versico', product: 'VersiFleece', thickness: 2.0, confidenceScore: 0.96 },
+      { manufacturer: 'Duro-Last', product: 'Duro-Fleece', thickness: 2.0, confidenceScore: 0.95 },
+      { manufacturer: 'Duro-Last', product: 'Duro-Fleece Plus', thickness: 2.0, confidenceScore: 0.94 },
+      { manufacturer: 'Duro-Last', product: 'Duro-Last EV Fleece', thickness: 2.0, confidenceScore: 0.93 },
+      { manufacturer: 'Duro-Last', product: 'Fleece Back', thickness: 2.0, confidenceScore: 0.92 }
+    ]
+  },
+
+  // ==========================================================================
+  // POLYISO INSULATION (From CSV)
+  // ==========================================================================
+  'insulation-polyiso': {
+    baseType: 'Polyisocyanurate Roof Insulation',
+    products: [
+      { manufacturer: 'Johns Manville', product: 'Polyisocyanurate Insulation', thickness: 50, confidenceScore: 1.0 },
+      { manufacturer: 'Atlas Roofing', product: 'Polyiso Roof Insulation', thickness: 50, confidenceScore: 0.96 },
+      { manufacturer: 'Hunter Panels', product: 'Polyiso Insulation', thickness: 50, confidenceScore: 0.95 },
+      { manufacturer: 'Carlisle SynTec', product: 'Insulation', thickness: 50, confidenceScore: 0.94 },
+      { manufacturer: 'PAC-CLAD', product: 'Insulation (polyiso)', thickness: 50, confidenceScore: 0.93 },
+      { manufacturer: 'GAF', product: 'EnergyGuard Polyiso', thickness: 50, confidenceScore: 0.92 },
+      { manufacturer: 'Rmax', product: 'Thermasheath-3', thickness: 50, confidenceScore: 0.91 }
+    ]
+  },
+
+  // ==========================================================================
+  // XPS INSULATION (Expanded)
+  // ==========================================================================
+  'insulation-xps': {
+    baseType: 'Extruded Polystyrene Insulation',
+    products: [
+      { manufacturer: 'Owens Corning', product: 'FOAMULAR XPS', thickness: 50, confidenceScore: 1.0 },
+      { manufacturer: 'Owens Corning', product: 'XPS Insulation', thickness: 50, confidenceScore: 0.98 },
+      { manufacturer: 'DuPont (DOW)', product: 'STYROFOAM', thickness: 50, confidenceScore: 0.96 },
+      { manufacturer: 'Kingspan', product: 'GreenGuard XPS', thickness: 50, confidenceScore: 0.94 }
+    ]
+  },
+
+  // ==========================================================================
+  // SILICONE COATINGS (From CSV)
+  // ==========================================================================
+  'coating-silicone': {
+    baseType: 'Silicone Roof Coating',
+    products: [
+      { manufacturer: 'Mule-Hide', product: 'Silicone Coatings', thickness: 1.0, confidenceScore: 1.0 },
+      { manufacturer: 'Duro-Last', product: 'Duro-Shield Coatings', thickness: 1.0, confidenceScore: 0.96 },
+      { manufacturer: 'W.R. Meadows', product: 'Silicone Roof Coatings', thickness: 1.0, confidenceScore: 0.95 },
+      { manufacturer: 'Carlisle SynTec', product: 'Coatings', thickness: 1.0, confidenceScore: 0.94 },
+      { manufacturer: 'GE Silicones', product: 'Enduris 3500', thickness: 1.0, confidenceScore: 0.92 }
+    ]
+  },
+
+  // ==========================================================================
+  // ACRYLIC COATINGS (From CSV)
+  // ==========================================================================
+  'coating-acrylic': {
+    baseType: 'Acrylic Roof Coating',
+    products: [
+      { manufacturer: 'Mule-Hide', product: 'Acrylic Coatings', thickness: 0.75, confidenceScore: 1.0 },
+      { manufacturer: 'Mule-Hide', product: 'Base Coatings', thickness: 0.75, confidenceScore: 0.96 },
+      { manufacturer: 'Mule-Hide', product: 'Finish Coatings', thickness: 0.75, confidenceScore: 0.95 },
+      { manufacturer: 'Polyglass', product: 'Elastomeric Roof Coatings', thickness: 0.75, confidenceScore: 0.94 },
+      { manufacturer: 'Polyglass', product: 'Fast Drying Coatings', thickness: 0.75, confidenceScore: 0.93 },
+      { manufacturer: 'Henry Company', product: 'Tropicool', thickness: 0.75, confidenceScore: 0.92 }
+    ]
+  },
+
+  // ==========================================================================
+  // AIR BARRIERS (From CSV)
+  // ==========================================================================
+  'air-barrier': {
+    baseType: 'Air Barrier System',
+    products: [
+      { manufacturer: 'SOPREMA', product: 'Air Barriers', thickness: 1.0, confidenceScore: 1.0 },
+      { manufacturer: 'W.R. Meadows', product: 'Fluid-Applied Air Barriers', thickness: 1.0, confidenceScore: 0.96 },
+      { manufacturer: 'W.R. Meadows', product: 'Sheet-Applied Air Barriers', thickness: 1.0, confidenceScore: 0.95 },
+      { manufacturer: 'W.R. Meadows', product: 'Vapor Permeable Air Barriers', thickness: 1.0, confidenceScore: 0.94 },
+      { manufacturer: 'Owens Corning', product: 'PINKWRAP Air Barrier Products', thickness: 1.0, confidenceScore: 0.93 },
+      { manufacturer: 'GCP Applied Technologies', product: 'PERM-A-BARRIER', thickness: 1.0, confidenceScore: 0.92 },
+      { manufacturer: 'Henry Company', product: 'Air-Bloc', thickness: 1.0, confidenceScore: 0.91 }
+    ]
+  },
+
+  // ==========================================================================
+  // COVER BOARDS (From CSV)
+  // ==========================================================================
+  'cover-board': {
+    baseType: 'Roof Cover Board',
+    products: [
+      { manufacturer: 'Mule-Hide', product: 'Cover Boards', thickness: 6.0, confidenceScore: 1.0 },
+      { manufacturer: 'Polyglass', product: 'Insulation and Coverboards', thickness: 6.0, confidenceScore: 0.96 },
+      { manufacturer: 'Polyglass', product: 'USG Securock Brand Roof Cover Boards', thickness: 6.0, confidenceScore: 0.95 },
+      { manufacturer: 'Duro-Last', product: 'Cover Board', thickness: 6.0, confidenceScore: 0.94 },
+      { manufacturer: 'Johns Manville', product: 'Roofing Insulation and Cover Boards', thickness: 6.0, confidenceScore: 0.93 },
+      { manufacturer: 'DensDeck', product: 'DensDeck Prime', thickness: 6.0, confidenceScore: 0.92 }
+    ]
+  },
+
+  // ==========================================================================
+  // VAPOR BARRIERS (From CSV)
+  // ==========================================================================
+  'vapor-barrier': {
+    baseType: 'Vapor Barrier/Retarder',
+    products: [
+      { manufacturer: 'W.R. Meadows', product: 'Vapor Barriers', thickness: 0.2, confidenceScore: 1.0 },
+      { manufacturer: 'W.R. Meadows', product: 'Concrete Vapor Barriers', thickness: 0.2, confidenceScore: 0.96 },
+      { manufacturer: 'Carlisle SynTec', product: 'Air and Vapor Barriers', thickness: 0.2, confidenceScore: 0.95 },
+      { manufacturer: 'Johns Manville', product: 'Vapor Retarder', thickness: 0.2, confidenceScore: 0.94 },
+      { manufacturer: 'Duro-Last', product: 'Vapor Barrier', thickness: 0.2, confidenceScore: 0.93 },
+      { manufacturer: 'Polyglass', product: 'Air & Vapor Barriers', thickness: 0.2, confidenceScore: 0.92 },
+      { manufacturer: 'Mule-Hide', product: 'Underlayments & Vapor Barriers', thickness: 0.2, confidenceScore: 0.91 }
+    ]
+  },
+
+  // ==========================================================================
+  // SEALANTS (From CSV)
+  // ==========================================================================
+  'sealant': {
+    baseType: 'Joint Sealant',
+    products: [
+      { manufacturer: 'W.R. Meadows', product: 'Joint Sealants', confidenceScore: 1.0 },
+      { manufacturer: 'W.R. Meadows', product: 'Hot-Applied Joint Sealants', confidenceScore: 0.96 },
+      { manufacturer: 'W.R. Meadows', product: 'Cold-Applied Joint Sealants', confidenceScore: 0.95 },
+      { manufacturer: 'SOPREMA', product: 'Sealants', confidenceScore: 0.94 },
+      { manufacturer: 'Polyglass', product: 'Mapeproof Sealant', confidenceScore: 0.93 },
+      { manufacturer: 'Sika', product: 'Sikaflex-1a', confidenceScore: 0.92 }
+    ]
+  },
+
+  // ==========================================================================
+  // ADHESIVES (From CSV)
+  // ==========================================================================
+  'adhesive': {
+    baseType: 'Roofing Adhesive',
+    products: [
+      { manufacturer: 'Mule-Hide', product: 'Water-Based Adhesives', confidenceScore: 1.0 },
+      { manufacturer: 'Mule-Hide', product: 'Solvent-Based Adhesives', confidenceScore: 0.96 },
+      { manufacturer: 'Mule-Hide', product: 'Low-VOC Adhesives', confidenceScore: 0.95 },
+      { manufacturer: 'Carlisle SynTec', product: 'Adhesives, Primers, Sealants', confidenceScore: 0.94 },
+      { manufacturer: 'Johns Manville', product: 'Adhesives, Cements, and Primers', confidenceScore: 0.93 },
+      { manufacturer: 'Versico', product: 'Adhesives, Primers, & Sealants', confidenceScore: 0.92 },
+      { manufacturer: 'SOPREMA', product: 'Adhesives', confidenceScore: 0.91 },
+      { manufacturer: 'W.R. Meadows', product: 'Anchoring & Bonding Adhesives', confidenceScore: 0.90 }
+    ]
+  },
+
+  // ==========================================================================
+  // FASTENERS (From CSV)
+  // ==========================================================================
+  'fastener': {
+    baseType: 'Roofing Fastener',
+    products: [
+      { manufacturer: 'Carlisle SynTec', product: 'Plates & Fasteners', confidenceScore: 1.0 },
+      { manufacturer: 'Johns Manville', product: 'Fasteners and Plates', confidenceScore: 0.96 },
+      { manufacturer: 'Duro-Last', product: 'Fasteners and Adhesives', confidenceScore: 0.95 },
+      { manufacturer: 'Mule-Hide', product: 'Fasteners & Termination', confidenceScore: 0.94 },
+      { manufacturer: 'SOPREMA', product: 'Fasteners', confidenceScore: 0.93 },
+      { manufacturer: 'Polyglass', product: 'Polyglass Heavy Duty Fastener', confidenceScore: 0.92 },
+      { manufacturer: 'Polyglass', product: 'Polyglass Extra Heavy Duty Fastener', confidenceScore: 0.91 }
+    ]
+  },
+
+  // ==========================================================================
+  // PRIMERS (From CSV)
+  // ==========================================================================
+  'primer': {
+    baseType: 'Roofing Primer',
+    products: [
+      { manufacturer: 'Mule-Hide', product: 'Primers', confidenceScore: 1.0 },
+      { manufacturer: 'Mule-Hide', product: 'Cleaners & Primers', confidenceScore: 0.96 },
+      { manufacturer: 'Polyglass', product: 'Polyglass PMMA Concrete and Wood Primer', confidenceScore: 0.95 },
+      { manufacturer: 'Polyglass', product: 'Polyglass PMMA Flexible Primer', confidenceScore: 0.94 },
+      { manufacturer: 'Polyglass', product: 'Polyglass Primer EP-1010', confidenceScore: 0.93 },
+      { manufacturer: 'Polyglass', product: 'Polyglass Primer EP-1020', confidenceScore: 0.92 }
+    ]
+  },
+
+  // ==========================================================================
+  // LIQUID APPLIED (From CSV)
+  // ==========================================================================
+  'coating-liquid': {
+    baseType: 'Liquid Applied Roofing System',
+    products: [
+      { manufacturer: 'SOPREMA', product: 'Liquid Applied Materials', thickness: 1.5, confidenceScore: 1.0 },
+      { manufacturer: 'Johns Manville', product: 'Liquid Applied Roofing Systems', thickness: 1.5, confidenceScore: 0.96 },
+      { manufacturer: 'Polyglass', product: 'Liquid Applied Waterproofing', thickness: 1.5, confidenceScore: 0.95 },
+      { manufacturer: 'Polyglass', product: 'Mapeproof Liquid Membrane', thickness: 1.5, confidenceScore: 0.94 }
+    ]
+  },
+
+  // ==========================================================================
+  // FLASHING (From CSV)
+  // ==========================================================================
+  'flashing': {
+    baseType: 'Roofing Flashing',
+    products: [
+      { manufacturer: 'Carlisle SynTec', product: 'Flashings & Accessories', confidenceScore: 1.0 },
+      { manufacturer: 'Duro-Last', product: 'Flashings and Accessories', confidenceScore: 0.96 },
+      { manufacturer: 'Mule-Hide', product: 'Flashings', confidenceScore: 0.95 },
+      { manufacturer: 'Johns Manville', product: 'Specs, Flashing Details & Assembly Plates', confidenceScore: 0.94 },
+      { manufacturer: 'Polyglass', product: 'Flashing Compounds', confidenceScore: 0.93 },
+      { manufacturer: 'Polyglass', product: 'Polyglass PMMA Flashing', confidenceScore: 0.92 },
+      { manufacturer: 'W.R. Meadows', product: 'Flashing Membranes', confidenceScore: 0.91 }
     ]
   }
 };
