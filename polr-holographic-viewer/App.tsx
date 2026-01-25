@@ -3,6 +3,8 @@ import { calculateCompressionRatio, validateSemanticDetail } from './schemas/sem
 import { SemanticToMeshConverter } from './hologram/semantic-to-mesh';
 import { HolographicRenderer, DisplayMode, HolographicConfig, CameraViewName } from './hologram/holographic-renderer';
 import { SAMPLE_DETAILS, getDetailById } from './data/sample-details';
+import { ComparisonPanel } from './components/ComparisonPanel';
+import { LightingPanel, LightingPreset } from './components/LightingPanel';
 import './styles/app.css';
 
 export default function HologramApp() {
@@ -22,6 +24,7 @@ export default function HologramApp() {
   
   const [xrSupport, setXrSupport] = useState({ ar: false, vr: false });
   const [showSemanticPanel, setShowSemanticPanel] = useState(true);
+  const [lightingPreset, setLightingPreset] = useState<LightingPreset>('studio');
   
   const selectedDetail = useMemo(() => 
     getDetailById(selectedDetailId) || SAMPLE_DETAILS[0],
@@ -71,6 +74,16 @@ export default function HologramApp() {
   };
   
   const resetCamera = () => renderer?.resetCamera();
+
+  const handleLightingChange = (preset: LightingPreset) => {
+    setLightingPreset(preset);
+    renderer?.setLightingPreset(preset);
+  };
+
+  const handleCompare = (mfr1: string, mfr2: string, mode: string) => {
+    console.log(`Compare: ${mfr1} vs ${mfr2} (${mode})`);
+    alert(`Comparing ${mfr1} vs ${mfr2}\n\nMode: ${mode}\n\nFull comparison visualization coming soon!`);
+  };
   
   return (
     <div className="hologram-app">
@@ -187,6 +200,19 @@ export default function HologramApp() {
                 </div>
               ))}
             </div>
+          </section>
+
+          <section className="panel-section">
+            <h3 className="section-title"><span className="section-icon">◈</span>Lighting</h3>
+            <LightingPanel
+              onPresetChange={handleLightingChange}
+              currentPreset={lightingPreset}
+            />
+          </section>
+
+          <section className="panel-section">
+            <h3 className="section-title"><span className="section-icon">◈</span>Or Equal Compare</h3>
+            <ComparisonPanel onCompare={handleCompare} />
           </section>
         </aside>
         

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { createLighting, LightingPreset, LightingSetup } from '../rendering/lighting-setup';
 
 export type DisplayMode =
   | 'standard-3d'      // Regular WebGL
@@ -47,6 +48,8 @@ export class HolographicRenderer {
   private detailGroup: THREE.Group | null = null;
   private clock: THREE.Clock;
   private scanLinesMesh: THREE.Mesh | null = null;
+  private currentLighting: LightingSetup | null = null;
+  private lightingPreset: LightingPreset = 'studio';
   
   constructor(container: HTMLElement, config: Partial<HolographicConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -426,6 +429,34 @@ export class HolographicRenderer {
     }
   }
   
+  /**
+   * Set lighting preset
+   */
+  setLightingPreset(preset: LightingPreset): void {
+    // Dispose old lighting
+    if (this.currentLighting) {
+      this.currentLighting.dispose();
+    }
+
+    this.lightingPreset = preset;
+    this.currentLighting = createLighting(this.scene, { preset, shadowQuality: 'high' });
+    console.log('[HoloRenderer] Lighting preset changed to:', preset);
+  }
+
+  /**
+   * Get current lighting preset
+   */
+  getLightingPreset(): LightingPreset {
+    return this.lightingPreset;
+  }
+
+  /**
+   * Get the scene for external manipulation
+   */
+  getScene(): THREE.Scene {
+    return this.scene;
+  }
+
   /**
    * Set display mode (for different hardware)
    */
