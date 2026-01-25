@@ -282,7 +282,11 @@ export const PRODUCT_EQUIVALENCIES: Record<string, {
       { manufacturer: 'W.R. Meadows', product: 'Cold-Applied Joint Sealants', confidenceScore: 0.95 },
       { manufacturer: 'SOPREMA', product: 'Sealants', confidenceScore: 0.94 },
       { manufacturer: 'Polyglass', product: 'Mapeproof Sealant', confidenceScore: 0.93 },
-      { manufacturer: 'Sika', product: 'Sikaflex-1a', confidenceScore: 0.92 }
+      { manufacturer: 'Sika', product: 'Sikaflex-1a', confidenceScore: 0.92 },
+      { manufacturer: 'GCP Applied Technologies', product: 'BITUTHENE Mastic', confidenceScore: 0.95 },
+      { manufacturer: 'GCP Applied Technologies', product: 'HYDRODUCT Sealant', confidenceScore: 0.93 },
+      { manufacturer: 'Carlisle CCW', product: 'CCW-201 Sealant', confidenceScore: 0.95 },
+      { manufacturer: 'Carlisle CCW', product: 'MiraSEAL', confidenceScore: 0.94 },
     ]
   },
 
@@ -330,7 +334,11 @@ export const PRODUCT_EQUIVALENCIES: Record<string, {
       { manufacturer: 'Polyglass', product: 'Polyglass PMMA Concrete and Wood Primer', confidenceScore: 0.95 },
       { manufacturer: 'Polyglass', product: 'Polyglass PMMA Flexible Primer', confidenceScore: 0.94 },
       { manufacturer: 'Polyglass', product: 'Polyglass Primer EP-1010', confidenceScore: 0.93 },
-      { manufacturer: 'Polyglass', product: 'Polyglass Primer EP-1020', confidenceScore: 0.92 }
+      { manufacturer: 'Polyglass', product: 'Polyglass Primer EP-1020', confidenceScore: 0.92 },
+      { manufacturer: 'GCP Applied Technologies', product: 'BITUTHENE Primer B2', confidenceScore: 0.95 },
+      { manufacturer: 'GCP Applied Technologies', product: 'BITUTHENE Primer B2 LVC', confidenceScore: 0.94 },
+      { manufacturer: 'Carlisle CCW', product: 'CCW Primer', confidenceScore: 0.95 },
+      { manufacturer: 'Carlisle CCW', product: 'CCW-702 Primer', confidenceScore: 0.94 },
     ]
   },
 
@@ -360,8 +368,28 @@ export const PRODUCT_EQUIVALENCIES: Record<string, {
       { manufacturer: 'Polyglass', product: 'Flashing Compounds', confidenceScore: 0.93 },
       { manufacturer: 'Polyglass', product: 'Polyglass PMMA Flashing', confidenceScore: 0.92 },
       { manufacturer: 'W.R. Meadows', product: 'Flashing Membranes', confidenceScore: 0.91 }
+
     ]
-  }
+  },
+  // ==========================================================================
+  // SUBSTRATES (Universal - same across all manufacturers)
+  // ==========================================================================
+  'substrate-concrete': {
+    baseType: 'Concrete Substrate',
+    products: [
+      { manufacturer: 'Generic', product: 'Cast-in-Place Concrete', confidenceScore: 1.0 },
+      { manufacturer: 'GCP Applied Technologies', product: 'Concrete Substrate', confidenceScore: 1.0 },
+      { manufacturer: 'Carlisle CCW', product: 'Concrete Substrate', confidenceScore: 1.0 }
+    ]
+  },
+  'substrate-cmu': {
+    baseType: 'Concrete Masonry Unit',
+    products: [
+      { manufacturer: 'Generic', product: 'CMU Wall', confidenceScore: 1.0 },
+      { manufacturer: 'GCP Applied Technologies', product: 'CMU Substrate', confidenceScore: 1.0 },
+      { manufacturer: 'Carlisle CCW', product: 'CMU Substrate', confidenceScore: 1.0 }
+    ]
+  },
 };
 
 // =============================================================================
@@ -395,11 +423,11 @@ export class OrEqualComparison {
       const variant = this.switchManufacturer(detail, mfr);
       const mesh = this.createDetailMesh(variant);
       mesh.position.x = index * spacing;
-      
+
       const label = this.createLabel(mfr);
       label.position.y = 300;
       mesh.add(label);
-      
+
       views.push(mesh);
       this.details.set(mfr, mesh);
       this.comparisonGroup.add(mesh);
@@ -426,7 +454,7 @@ export class OrEqualComparison {
     this.applyClippingPlane(view2, inversePlane);
 
     group.add(view1, view2);
-    
+
     group.userData.updateSlider = (position: number) => {
       const bounds = new THREE.Box3().setFromObject(group);
       const width = bounds.max.x - bounds.min.x;
