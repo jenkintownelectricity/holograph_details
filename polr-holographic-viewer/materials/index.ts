@@ -8,3 +8,5 @@
 export * from './base-materials';
 export * from './manufacturers';
 export * from './material-factory';
+export * from './texture-library';
+export * from './ai-texture-generator';
