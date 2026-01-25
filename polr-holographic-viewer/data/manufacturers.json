@@ -1,0 +1,91 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-01-25T18:25:00Z",
+  "source": "roofing_data_FULL_MASTER.csv",
+  "manufacturers": {
+    "carlisle": {
+      "id": "carlisle",
+      "name": "Carlisle",
+      "displayName": "Carlisle SynTec Systems",
+      "website": "https://www.carlislesyntec.com",
+      "categories": ["roofing", "membranes", "insulation", "coatings"]
+    },
+    "johns-manville": {
+      "id": "johns-manville",
+      "name": "Johns Manville",
+      "displayName": "Johns Manville",
+      "website": "https://www.jm.com",
+      "categories": ["roofing", "insulation", "membranes", "tpo", "pvc", "epdm"]
+    },
+    "soprema": {
+      "id": "soprema",
+      "name": "SOPREMA",
+      "displayName": "SOPREMA Inc.",
+      "website": "https://www.soprema.us",
+      "categories": ["roofing", "modified-bitumen", "air-barriers", "waterproofing"]
+    },
+    "versico": {
+      "id": "versico",
+      "name": "Versico",
+      "displayName": "Versico Roofing Systems",
+      "website": "https://www.versico.com",
+      "categories": ["roofing", "tpo", "fleece"]
+    },
+    "duro-last": {
+      "id": "duro-last",
+      "name": "Duro-Last",
+      "displayName": "Duro-Last Roofing Inc.",
+      "website": "https://duro-last.com",
+      "categories": ["roofing", "membranes", "tpo", "coatings", "fleece"]
+    },
+    "mule-hide": {
+      "id": "mule-hide",
+      "name": "Mule-Hide",
+      "displayName": "Mule-Hide Products Co.",
+      "website": "https://www.mulehide.com",
+      "categories": ["roofing", "coatings", "adhesives", "fasteners"]
+    },
+    "polyglass": {
+      "id": "polyglass",
+      "name": "Polyglass",
+      "displayName": "Polyglass USA Inc.",
+      "website": "https://polyglass.us",
+      "categories": ["roofing", "modified-bitumen", "coatings", "membranes"]
+    },
+    "pac-clad": {
+      "id": "pac-clad",
+      "name": "PAC-CLAD",
+      "displayName": "PAC-CLAD | Petersen",
+      "website": "https://www.pac-clad.com",
+      "categories": ["roofing", "metal-panels", "insulation"]
+    },
+    "wr-meadows": {
+      "id": "wr-meadows",
+      "name": "W.R. Meadows",
+      "displayName": "W.R. Meadows Inc.",
+      "website": "https://www.wrmeadows.com",
+      "categories": ["sealants", "vapor-barriers", "air-barriers", "coatings"]
+    },
+    "owens-corning": {
+      "id": "owens-corning",
+      "name": "Owens Corning",
+      "displayName": "Owens Corning",
+      "website": "https://www.owenscorning.com",
+      "categories": ["insulation", "xps", "air-barriers", "fiberglass"]
+    },
+    "atlas-roofing": {
+      "id": "atlas-roofing",
+      "name": "Atlas Roofing",
+      "displayName": "Atlas Roofing Corporation",
+      "website": "https://www.atlasrwi.com",
+      "categories": ["insulation", "polyiso", "eps"]
+    },
+    "hunter-panels": {
+      "id": "hunter-panels",
+      "name": "Hunter Panels",
+      "displayName": "Hunter Panels LLC",
+      "website": "https://www.hunterpanels.com",
+      "categories": ["insulation", "polyiso"]
+    }
+  }
+}

@@ -1,0 +1,230 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-01-25T18:25:00Z",
+  "productTypes": {
+    "membrane-tpo": {
+      "id": "membrane-tpo",
+      "name": "TPO Membrane",
+      "category": "membranes",
+      "csiSection": "07 54 23",
+      "description": "Thermoplastic Polyolefin single-ply roofing membrane",
+      "defaultThickness": 1.5,
+      "thicknessUnit": "mm",
+      "color": "#E8E8E8"
+    },
+    "membrane-epdm": {
+      "id": "membrane-epdm",
+      "name": "EPDM Membrane",
+      "category": "membranes",
+      "csiSection": "07 53 23",
+      "description": "Ethylene Propylene Diene Monomer rubber membrane",
+      "defaultThickness": 1.5,
+      "thicknessUnit": "mm",
+      "color": "#2C2C2C"
+    },
+    "membrane-pvc": {
+      "id": "membrane-pvc",
+      "name": "PVC Membrane",
+      "category": "membranes",
+      "csiSection": "07 54 19",
+      "description": "Polyvinyl Chloride single-ply roofing membrane",
+      "defaultThickness": 1.5,
+      "thicknessUnit": "mm",
+      "color": "#D4D4D4"
+    },
+    "membrane-mod-bit": {
+      "id": "membrane-mod-bit",
+      "name": "Modified Bitumen",
+      "category": "membranes",
+      "csiSection": "07 52 13",
+      "description": "SBS or APP modified bitumen roofing membrane",
+      "defaultThickness": 4.0,
+      "thicknessUnit": "mm",
+      "color": "#1A1A1A"
+    },
+    "membrane-fleece": {
+      "id": "membrane-fleece",
+      "name": "Fleece-Backed Membrane",
+      "category": "membranes",
+      "csiSection": "07 54 23",
+      "description": "Single-ply membrane with fleece backing for adhesion",
+      "defaultThickness": 2.0,
+      "thicknessUnit": "mm",
+      "color": "#C0C0C0"
+    },
+    "membrane-generic": {
+      "id": "membrane-generic",
+      "name": "Roofing Membrane",
+      "category": "membranes",
+      "csiSection": "07 50 00",
+      "description": "Generic roofing membrane",
+      "defaultThickness": 1.5,
+      "thicknessUnit": "mm",
+      "color": "#808080"
+    },
+    "insulation-polyiso": {
+      "id": "insulation-polyiso",
+      "name": "Polyisocyanurate Insulation",
+      "category": "insulation",
+      "csiSection": "07 22 16",
+      "description": "Rigid polyisocyanurate foam insulation board",
+      "defaultThickness": 50,
+      "thicknessUnit": "mm",
+      "color": "#FFE4B5",
+      "rValue": 6.0
+    },
+    "insulation-xps": {
+      "id": "insulation-xps",
+      "name": "XPS Insulation",
+      "category": "insulation",
+      "csiSection": "07 21 13",
+      "description": "Extruded polystyrene rigid foam insulation",
+      "defaultThickness": 50,
+      "thicknessUnit": "mm",
+      "color": "#FFB6C1",
+      "rValue": 5.0
+    },
+    "insulation-eps": {
+      "id": "insulation-eps",
+      "name": "EPS Insulation",
+      "category": "insulation",
+      "csiSection": "07 21 16",
+      "description": "Expanded polystyrene rigid foam insulation",
+      "defaultThickness": 50,
+      "thicknessUnit": "mm",
+      "color": "#FFFFFF",
+      "rValue": 4.0
+    },
+    "insulation-mineral-wool": {
+      "id": "insulation-mineral-wool",
+      "name": "Mineral Wool Insulation",
+      "category": "insulation",
+      "csiSection": "07 21 19",
+      "description": "Mineral wool or rock wool insulation board",
+      "defaultThickness": 50,
+      "thicknessUnit": "mm",
+      "color": "#8B7355",
+      "rValue": 4.3
+    },
+    "coating-silicone": {
+      "id": "coating-silicone",
+      "name": "Silicone Roof Coating",
+      "category": "coatings",
+      "csiSection": "07 56 00",
+      "description": "High-solids silicone reflective roof coating",
+      "defaultThickness": 1.0,
+      "thicknessUnit": "mm",
+      "color": "#F5F5F5"
+    },
+    "coating-acrylic": {
+      "id": "coating-acrylic",
+      "name": "Acrylic Roof Coating",
+      "category": "coatings",
+      "csiSection": "07 56 00",
+      "description": "Water-based acrylic elastomeric roof coating",
+      "defaultThickness": 0.75,
+      "thicknessUnit": "mm",
+      "color": "#FAFAFA"
+    },
+    "coating-asphalt": {
+      "id": "coating-asphalt",
+      "name": "Asphalt Coating",
+      "category": "coatings",
+      "csiSection": "07 56 00",
+      "description": "Asphalt-based protective roof coating",
+      "defaultThickness": 0.5,
+      "thicknessUnit": "mm",
+      "color": "#1C1C1C"
+    },
+    "coating-liquid": {
+      "id": "coating-liquid",
+      "name": "Liquid Applied Coating",
+      "category": "coatings",
+      "csiSection": "07 56 00",
+      "description": "Liquid applied waterproofing or roofing system",
+      "defaultThickness": 1.5,
+      "thicknessUnit": "mm",
+      "color": "#E0E0E0"
+    },
+    "air-barrier": {
+      "id": "air-barrier",
+      "name": "Air Barrier",
+      "category": "barriers",
+      "csiSection": "07 27 00",
+      "description": "Air barrier membrane or coating",
+      "defaultThickness": 1.0,
+      "thicknessUnit": "mm",
+      "color": "#87CEEB"
+    },
+    "vapor-barrier": {
+      "id": "vapor-barrier",
+      "name": "Vapor Barrier",
+      "category": "barriers",
+      "csiSection": "07 26 00",
+      "description": "Vapor retarder or barrier membrane",
+      "defaultThickness": 0.2,
+      "thicknessUnit": "mm",
+      "color": "#B8B8B8"
+    },
+    "cover-board": {
+      "id": "cover-board",
+      "name": "Cover Board",
+      "category": "accessories",
+      "csiSection": "07 22 00",
+      "description": "Protective cover board over insulation",
+      "defaultThickness": 6.0,
+      "thicknessUnit": "mm",
+      "color": "#D2B48C"
+    },
+    "flashing": {
+      "id": "flashing",
+      "name": "Flashing",
+      "category": "accessories",
+      "csiSection": "07 62 00",
+      "description": "Sheet metal or membrane flashing",
+      "defaultThickness": 0.5,
+      "thicknessUnit": "mm",
+      "color": "#C0C0C0"
+    },
+    "fastener": {
+      "id": "fastener",
+      "name": "Fastener",
+      "category": "accessories",
+      "csiSection": "07 05 53",
+      "description": "Mechanical fasteners and plates",
+      "defaultThickness": 0,
+      "thicknessUnit": "mm",
+      "color": "#A9A9A9"
+    },
+    "adhesive": {
+      "id": "adhesive",
+      "name": "Adhesive",
+      "category": "accessories",
+      "csiSection": "07 05 56",
+      "description": "Bonding adhesive for roofing systems",
+      "defaultThickness": 0.5,
+      "thicknessUnit": "mm",
+      "color": "#D4A574"
+    },
+    "sealant": {
+      "id": "sealant",
+      "name": "Sealant",
+      "category": "accessories",
+      "csiSection": "07 92 00",
+      "description": "Joint sealant for roofing applications",
+      "defaultThickness": 0,
+      "thicknessUnit": "mm",
+      "color": "#696969"
+    },
+    "primer": {
+      "id": "primer",
+      "name": "Primer",
+      "category": "accessories",
+      "csiSection": "07 05 56",
+      "description": "Surface primer for adhesion",
+      "defaultThickness": 0.1,
+      "thicknessUnit": "mm",
+      "color": "#4A4A4A"
+    }
+  }
+}
