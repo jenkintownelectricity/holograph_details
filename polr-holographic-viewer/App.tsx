@@ -11,6 +11,10 @@ import { ComparisonSlider } from './components/ComparisonSlider';
 import { ComparisonToggle } from './components/ComparisonToggle';
 import { useOrEqualComparison } from './hooks/useOrEqualComparison';
 import { ComparisonMode } from './features/or-equal-comparison';
+import { DNAImportButton } from './components/DNAImportButton';
+import { LayerDNAPanel } from './components/LayerDNAPanel';
+import { useDNAMaterialStore, useMaterialCount } from './stores/dna-material-store';
+import { resolveMaterialType } from './data/layer-material-mapping';
 import './styles/app.css';
 
 // Convert uploaded Assembly (Construction DNA format) to SemanticDetail
@@ -145,6 +149,10 @@ export default function HologramApp() {
 
   // Or-Equal Comparison state
   const comparison = useOrEqualComparison(renderer?.getScene() ?? null);
+
+  // DNA Material Store
+  const dnaMaterialCount = useMaterialCount();
+  const [expandedLayerDNA, setExpandedLayerDNA] = useState<string | null>(null);
   
   // Combine sample details with uploaded details
   const allDetails = useMemo(() =>
@@ -247,6 +255,13 @@ export default function HologramApp() {
           <span className="detail-id">{selectedDetail.id}</span>
         </div>
         <div className="header-right">
+          <DNAImportButton variant="secondary" />
+          {dnaMaterialCount > 0 && (
+            <div className="dna-material-badge">
+              <span className="badge-value">{dnaMaterialCount}</span>
+              <span className="badge-label">DNA Materials</span>
+            </div>
+          )}
           <div className="compression-badge">
             <span className="badge-value">{compressionStats.ratio.toLocaleString()}:1</span>
             <span className="badge-label">Compression</span>
@@ -466,16 +481,34 @@ export default function HologramApp() {
             </div>
             <div className="layers-list">
               <h4>Layer Stack</h4>
-              {selectedDetail.layers.map((layer, i) => (
-                <div key={i} className="layer-item">
-                  <div className="layer-color" style={{ backgroundColor: layer.properties.color }} />
-                  <div className="layer-info">
-                    <span className="layer-name">{layer.id}</span>
-                    <span className="layer-material">{layer.material}</span>
-                    <span className="layer-thickness">{layer.thickness}mm</span>
+              {selectedDetail.layers.map((layer, i) => {
+                const materialType = resolveMaterialType(layer.id, layer.material, layer.annotation);
+                const isExpanded = expandedLayerDNA === layer.id;
+                return (
+                  <div key={i} className="layer-item-container">
+                    <div
+                      className={`layer-item ${isExpanded ? 'layer-item--expanded' : ''}`}
+                      onClick={() => setExpandedLayerDNA(isExpanded ? null : layer.id)}
+                    >
+                      <div className="layer-color" style={{ backgroundColor: layer.properties.color }} />
+                      <div className="layer-info">
+                        <span className="layer-name">{layer.id}</span>
+                        <span className="layer-material">{layer.material}</span>
+                        <span className="layer-thickness">{layer.thickness}mm</span>
+                      </div>
+                      {materialType && <span className="layer-dna-indicator">🧬</span>}
+                    </div>
+                    {isExpanded && materialType && (
+                      <LayerDNAPanel
+                        materialType={materialType}
+                        layerName={layer.annotation || layer.id}
+                        isExpanded={true}
+                        compact={true}
+                      />
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </aside>
         )}
