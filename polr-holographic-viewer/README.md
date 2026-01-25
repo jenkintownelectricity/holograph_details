@@ -137,6 +137,30 @@ src/
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## New Features (v1.1.0)
+
+### Track A: Photorealistic Rendering
+- **Texture Library** - Hybrid procedural/AI/photo texture system with 25+ materials
+- **Lighting Presets** - Studio, outdoor, overcast, technical, and dramatic lighting modes
+- **Material Categories** - Membranes, insulation, concrete, metal, sealants, drainage
+
+### Track B: Patentable Features
+- **Or-Equal Comparison** - Compare products across manufacturers (GCP, Carlisle, Sika, Tremco, etc.)
+- **Specification Integration** - CSI 3-part spec generation (coming soon)
+- **Embeddable Widget** - For manufacturer websites (coming soon)
+- **REST API** - Programmatic access (coming soon)
+
+### Manufacturer Support
+Currently supports product mapping for:
+- GCP Applied Technologies
+- Carlisle CCW
+- Sika
+- Tremco
+- W.R. Meadows
+- Henry Company
+- Firestone/Holcim Elevate
+- DuPont (DOW)
+
 ## Future Roadmap
 
 ### Hardware Integration
