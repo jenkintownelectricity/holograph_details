@@ -1,113 +1,195 @@
 /**
  * Materials Module Tests
  * Tests for texture library and material definitions
+ * Updated for L0-CMD-2026-0125-003 with actual texture-library exports
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 
-// Mock THREE.js since we're in a Node test environment
-vi.mock('three', () => ({
-  MeshStandardMaterial: class MockMeshStandardMaterial {
-    color: object;
-    map: object | null;
-    normalMap: object | null;
-    roughnessMap: object | null;
-    metalnessMap: object | null;
-    constructor(params?: object) {
-      Object.assign(this, { color: {}, map: null, normalMap: null, roughnessMap: null, metalnessMap: null, ...params });
-    }
-  },
-  MeshPhysicalMaterial: class MockMeshPhysicalMaterial {
-    constructor(params?: object) {
-      Object.assign(this, params);
-    }
-  },
-  TextureLoader: class MockTextureLoader {
-    load(url: string) {
-      return { url, isTexture: true };
-    }
-  },
-  CanvasTexture: class MockCanvasTexture {
-    constructor(canvas: object) {
-      // Mock canvas texture
-    }
-  },
-  RepeatWrapping: 1000,
-  LinearFilter: 1006,
-  Color: class MockColor {
-    constructor(color?: string | number) {}
-    setHex(hex: number) { return this; }
-  },
-  Vector2: class MockVector2 {
-    constructor(x = 0, y = 0) {}
-  }
-}));
+// Three.js is mocked via vitest.config.ts alias to tests/__mocks__/three.ts
 
-import { TEXTURE_LIBRARY, getTexture, getMaterial, generateProceduralTexture } from '../materials/texture-library';
+import { TextureLibrary, textureLibrary } from '../materials/texture-library';
 
 describe('Texture Library', () => {
-  describe('TEXTURE_LIBRARY constant', () => {
+  describe('textureLibrary singleton', () => {
     it('should be defined', () => {
-      expect(TEXTURE_LIBRARY).toBeDefined();
+      expect(textureLibrary).toBeDefined();
     });
 
-    it('should have concrete texture category', () => {
-      expect(TEXTURE_LIBRARY.concrete).toBeDefined();
-    });
-
-    it('should have membrane texture category', () => {
-      expect(TEXTURE_LIBRARY.membrane).toBeDefined();
-    });
-
-    it('should have metal texture category', () => {
-      expect(TEXTURE_LIBRARY.metal).toBeDefined();
+    it('should be an instance of TextureLibrary', () => {
+      expect(textureLibrary).toBeInstanceOf(TextureLibrary);
     });
   });
 
-  describe('getTexture function', () => {
-    it('should return texture for valid material type', () => {
-      const texture = getTexture('concrete');
-      expect(texture).toBeDefined();
+  describe('TextureLibrary class', () => {
+    let library: TextureLibrary;
+
+    beforeEach(() => {
+      library = new TextureLibrary();
     });
 
-    it('should return fallback for unknown material type', () => {
-      const texture = getTexture('unknown-material');
-      // Should return a fallback or undefined gracefully
-      expect(texture !== undefined || texture === undefined).toBe(true);
+    it('should instantiate without errors', () => {
+      expect(library).toBeDefined();
+    });
+
+    it('should accept custom CDN base URL', () => {
+      const customLibrary = new TextureLibrary({ cdnBaseUrl: '/custom-textures' });
+      expect(customLibrary).toBeDefined();
     });
   });
 
-  describe('getMaterial function', () => {
-    it('should return material for concrete', () => {
-      const material = getMaterial('concrete');
+  describe('getMaterial method', () => {
+    it('should return a material for bituthene-3000', async () => {
+      const material = await textureLibrary.getMaterial('bituthene-3000');
       expect(material).toBeDefined();
     });
 
-    it('should return material for membrane', () => {
-      const material = getMaterial('membrane');
+    it('should return a material for tpo-white', async () => {
+      const material = await textureLibrary.getMaterial('tpo-white');
       expect(material).toBeDefined();
     });
 
-    it('should handle unknown material types gracefully', () => {
-      // Should not throw
-      expect(() => getMaterial('unknown')).not.toThrow();
+    it('should return a material for epdm-black', async () => {
+      const material = await textureLibrary.getMaterial('epdm-black');
+      expect(material).toBeDefined();
+    });
+
+    it('should return a fallback material for unknown material type', async () => {
+      const material = await textureLibrary.getMaterial('unknown-material-type');
+      expect(material).toBeDefined();
+    });
+
+    it('should handle quality options', async () => {
+      const material = await textureLibrary.getMaterial('bituthene-3000', {
+        quality: 'high'
+      });
+      expect(material).toBeDefined();
     });
   });
 
-  describe('generateProceduralTexture function', () => {
-    it('should generate noise texture', () => {
-      const texture = generateProceduralTexture('noise', 256, { scale: 10 });
-      expect(texture).toBeDefined();
+  describe('getMaterialsByCategory method', () => {
+    it('should return materials for membrane-waterproofing category', () => {
+      const materials = textureLibrary.getMaterialsByCategory('membrane-waterproofing');
+      expect(materials).toBeDefined();
+      expect(Array.isArray(materials)).toBe(true);
+      expect(materials.length).toBeGreaterThan(0);
     });
 
-    it('should generate grid texture', () => {
-      const texture = generateProceduralTexture('grid', 256, { spacing: 20 });
-      expect(texture).toBeDefined();
+    it('should return materials for membrane-roofing category', () => {
+      const materials = textureLibrary.getMaterialsByCategory('membrane-roofing');
+      expect(materials).toBeDefined();
+      expect(Array.isArray(materials)).toBe(true);
     });
 
-    it('should generate gradient texture', () => {
-      const texture = generateProceduralTexture('gradient', 256, {});
-      expect(texture).toBeDefined();
+    it('should return materials for insulation category', () => {
+      const materials = textureLibrary.getMaterialsByCategory('insulation');
+      expect(materials).toBeDefined();
+      expect(Array.isArray(materials)).toBe(true);
+    });
+  });
+
+  describe('getMaterialsByManufacturer method', () => {
+    it('should return materials for GCP Applied Technologies', () => {
+      const materials = textureLibrary.getMaterialsByManufacturer('GCP Applied Technologies');
+      expect(materials).toBeDefined();
+      expect(Array.isArray(materials)).toBe(true);
+      expect(materials.length).toBeGreaterThan(0);
+    });
+
+    it('should return materials for Carlisle CCW', () => {
+      const materials = textureLibrary.getMaterialsByManufacturer('Carlisle CCW');
+      expect(materials).toBeDefined();
+      expect(Array.isArray(materials)).toBe(true);
+    });
+
+    it('should return empty array for unknown manufacturer', () => {
+      const materials = textureLibrary.getMaterialsByManufacturer('Unknown Manufacturer XYZ');
+      expect(materials).toBeDefined();
+      expect(Array.isArray(materials)).toBe(true);
+      expect(materials.length).toBe(0);
+    });
+  });
+
+  describe('searchMaterials method', () => {
+    it('should find materials by search term', () => {
+      const results = textureLibrary.searchMaterials('waterproofing');
+      expect(results).toBeDefined();
+      expect(Array.isArray(results)).toBe(true);
+    });
+
+    it('should find materials for TPO search', () => {
+      const results = textureLibrary.searchMaterials('tpo');
+      expect(results).toBeDefined();
+      expect(Array.isArray(results)).toBe(true);
+    });
+
+    it('should find materials for insulation search', () => {
+      const results = textureLibrary.searchMaterials('insulation');
+      expect(results).toBeDefined();
+      expect(Array.isArray(results)).toBe(true);
+    });
+  });
+
+  describe('getTextureDefinition method', () => {
+    it('should return texture definition for valid ID', () => {
+      const definition = textureLibrary.getTextureDefinition('bituthene-3000');
+      expect(definition).toBeDefined();
+      expect(definition?.id).toBe('bituthene-3000');
+    });
+
+    it('should return undefined for invalid ID', () => {
+      const definition = textureLibrary.getTextureDefinition('non-existent-id');
+      expect(definition).toBeUndefined();
+    });
+  });
+
+  describe('listAllMaterials method', () => {
+    it('should return array of material IDs', () => {
+      const ids = textureLibrary.listAllMaterials();
+      expect(ids).toBeDefined();
+      expect(Array.isArray(ids)).toBe(true);
+      expect(ids.length).toBeGreaterThan(0);
+    });
+
+    it('should include expected materials', () => {
+      const ids = textureLibrary.listAllMaterials();
+      expect(ids).toContain('bituthene-3000');
+      expect(ids).toContain('tpo-white');
+      expect(ids).toContain('epdm-black');
+    });
+  });
+
+  describe('clearCache method', () => {
+    it('should not throw when called', () => {
+      expect(() => textureLibrary.clearCache()).not.toThrow();
+    });
+  });
+
+  describe('registerTexture method', () => {
+    it('should register custom texture', () => {
+      const customTexture = {
+        id: 'custom-test-texture',
+        materialType: 'membrane-custom',
+        source: 'procedural' as const,
+        textures: {},
+        procedural: {
+          color: '#ff0000',
+          roughness: 0.5,
+          metalness: 0.0,
+          bumpScale: 0.1,
+          pattern: 'solid' as const
+        },
+        resolution: 1024,
+        tileSizeMM: 300,
+        displayName: 'Custom Test Texture',
+        category: 'membrane-waterproofing' as const,
+        tags: ['test', 'custom']
+      };
+
+      textureLibrary.registerTexture(customTexture);
+      const retrieved = textureLibrary.getTextureDefinition('custom-test-texture');
+      expect(retrieved).toBeDefined();
+      expect(retrieved?.id).toBe('custom-test-texture');
     });
   });
 });

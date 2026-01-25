@@ -1,90 +1,12 @@
 /**
  * Geometry Module Tests
  * Tests for realistic detail geometry generation
+ * Updated for L0-CMD-2026-0125-003 with complete Three.js mocks
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
-// Mock THREE.js since we're in a Node test environment
-vi.mock('three', () => ({
-  Mesh: class MockMesh {
-    geometry: object;
-    material: object;
-    position = { x: 0, y: 0, z: 0 };
-    constructor(geometry?: object, material?: object) {
-      this.geometry = geometry || {};
-      this.material = material || {};
-    }
-  },
-  Group: class MockGroup {
-    children: object[] = [];
-    add(child: object) {
-      this.children.push(child);
-      return this;
-    }
-  },
-  CylinderGeometry: class MockCylinderGeometry {
-    parameters: object;
-    constructor(...args: number[]) {
-      this.parameters = { args };
-    }
-  },
-  BoxGeometry: class MockBoxGeometry {
-    parameters: object;
-    constructor(width?: number, height?: number, depth?: number) {
-      this.parameters = { width, height, depth };
-    }
-  },
-  TubeGeometry: class MockTubeGeometry {
-    parameters: object;
-    constructor(...args: unknown[]) {
-      this.parameters = { args };
-    }
-  },
-  PlaneGeometry: class MockPlaneGeometry {
-    parameters: object;
-    constructor(width?: number, height?: number) {
-      this.parameters = { width, height };
-    }
-  },
-  MeshStandardMaterial: class MockMeshStandardMaterial {
-    color: object;
-    metalness: number;
-    roughness: number;
-    constructor(params?: object) {
-      Object.assign(this, params);
-    }
-  },
-  CatmullRomCurve3: class MockCatmullRomCurve3 {
-    points: object[];
-    constructor(points?: object[]) {
-      this.points = points || [];
-    }
-  },
-  Vector3: class MockVector3 {
-    x: number;
-    y: number;
-    z: number;
-    constructor(x = 0, y = 0, z = 0) {
-      this.x = x;
-      this.y = y;
-      this.z = z;
-    }
-  },
-  Color: class MockColor {
-    r: number;
-    g: number;
-    b: number;
-    constructor(color?: string | number) {
-      this.r = 0;
-      this.g = 0;
-      this.b = 0;
-    }
-    setHex(hex: number) {
-      return this;
-    }
-  }
-}));
+// Three.js is mocked via vitest.config.ts alias to tests/__mocks__/three.ts
 
 import {
   createFastener,

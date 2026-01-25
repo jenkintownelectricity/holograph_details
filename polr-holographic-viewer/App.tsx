@@ -6,6 +6,11 @@ import { SAMPLE_DETAILS, getDetailById } from './data/sample-details';
 import { ComparisonPanel } from './components/ComparisonPanel';
 import { LightingPanel, LightingPreset } from './components/LightingPanel';
 import { ZipUpload, Assembly, AssemblyLayer } from './components/ZipUpload';
+import { ComparisonSideBySide } from './components/ComparisonSideBySide';
+import { ComparisonSlider } from './components/ComparisonSlider';
+import { ComparisonToggle } from './components/ComparisonToggle';
+import { useOrEqualComparison } from './hooks/useOrEqualComparison';
+import { ComparisonMode } from './features/or-equal-comparison';
 import './styles/app.css';
 
 // Convert uploaded Assembly (Construction DNA format) to SemanticDetail
@@ -137,6 +142,9 @@ export default function HologramApp() {
   // Uploaded assembly state
   const [uploadedAssemblies, setUploadedAssemblies] = useState<Assembly[]>([]);
   const [uploadedDetails, setUploadedDetails] = useState<SemanticDetail[]>([]);
+
+  // Or-Equal Comparison state
+  const comparison = useOrEqualComparison(renderer?.getScene() ?? null);
   
   // Combine sample details with uploaded details
   const allDetails = useMemo(() =>
@@ -215,7 +223,13 @@ export default function HologramApp() {
 
   const handleCompare = (mfr1: string, mfr2: string, mode: string) => {
     console.log(`Compare: ${mfr1} vs ${mfr2} (${mode})`);
-    alert(`Comparing ${mfr1} vs ${mfr2}\n\nMode: ${mode}\n\nFull comparison visualization coming soon!`);
+    // Start comparison using the or-equal comparison hook
+    comparison.startComparison(
+      selectedDetail,
+      mfr1,
+      mfr2,
+      mode as ComparisonMode
+    );
   };
   
   return (
@@ -385,6 +399,39 @@ export default function HologramApp() {
             onAssembliesLoaded={handleAssembliesLoaded}
             onError={(error) => console.error('Upload error:', error)}
           />
+
+          {/* Or-Equal Comparison Overlays */}
+          {comparison.isComparing && comparison.manufacturers && (
+            <>
+              {comparison.mode === 'side-by-side' && (
+                <ComparisonSideBySide
+                  manufacturerA={comparison.manufacturers[0]}
+                  manufacturerB={comparison.manufacturers[1]}
+                  differenceReport={comparison.differenceReport}
+                  onClose={comparison.stopComparison}
+                />
+              )}
+              {comparison.mode === 'slider' && (
+                <ComparisonSlider
+                  manufacturerA={comparison.manufacturers[0]}
+                  manufacturerB={comparison.manufacturers[1]}
+                  differenceReport={comparison.differenceReport}
+                  sliderPosition={comparison.sliderPosition}
+                  onSliderChange={comparison.setSliderPosition}
+                  onClose={comparison.stopComparison}
+                />
+              )}
+              {(comparison.mode === 'toggle' || comparison.mode === 'animate') && (
+                <ComparisonToggle
+                  manufacturers={comparison.manufacturers}
+                  currentIndex={comparison.currentToggleIndex}
+                  differenceReport={comparison.differenceReport}
+                  onToggle={comparison.toggle}
+                  onClose={comparison.stopComparison}
+                />
+              )}
+            </>
+          )}
         </main>
         
         {showSemanticPanel && (
