@@ -1,0 +1,387 @@
+{
+  "generatedAt": "2026-01-25T23:51:00Z",
+  "commandId": "L0-CMD-2026-0125-008",
+  "totalProducts": 334,
+  "totalCategories": 27,
+  "coverage": {
+    "GCP Applied Technologies": {
+      "categories": [
+        "membrane-self-adhered-waterproofing",
+        "membrane-air-barrier",
+        "drainage-composite",
+        "air-barrier",
+        "coating-liquid",
+        "primer",
+        "vapor-barrier",
+        "sealant"
+      ],
+      "productCount": 18,
+      "completeness": 95
+    },
+    "Carlisle SynTec": {
+      "categories": [
+        "membrane-tpo",
+        "membrane-epdm",
+        "membrane-pvc",
+        "membrane-fleece",
+        "membrane-mod-bit",
+        "insulation-polyiso",
+        "coating-silicone",
+        "coating-acrylic",
+        "adhesive",
+        "fastener",
+        "primer",
+        "flashing"
+      ],
+      "productCount": 24,
+      "completeness": 98
+    },
+    "Carlisle CCW": {
+      "categories": [
+        "membrane-self-adhered-waterproofing",
+        "membrane-air-barrier",
+        "drainage-composite",
+        "air-barrier",
+        "vapor-barrier"
+      ],
+      "productCount": 10,
+      "completeness": 85
+    },
+    "Johns Manville": {
+      "categories": [
+        "membrane-tpo",
+        "membrane-epdm",
+        "membrane-pvc",
+        "membrane-fleece",
+        "membrane-mod-bit",
+        "insulation-polyiso",
+        "cover-board",
+        "vapor-barrier",
+        "adhesive",
+        "fastener",
+        "primer",
+        "flashing",
+        "coating-liquid"
+      ],
+      "productCount": 22,
+      "completeness": 97
+    },
+    "Firestone": {
+      "categories": [
+        "membrane-tpo",
+        "membrane-epdm",
+        "membrane-pvc",
+        "membrane-fleece",
+        "membrane-mod-bit",
+        "insulation-polyiso",
+        "cover-board",
+        "adhesive",
+        "fastener",
+        "primer",
+        "flashing"
+      ],
+      "productCount": 18,
+      "completeness": 95
+    },
+    "GAF": {
+      "categories": [
+        "membrane-tpo",
+        "membrane-epdm",
+        "membrane-pvc",
+        "membrane-fleece",
+        "membrane-mod-bit",
+        "insulation-polyiso",
+        "cover-board",
+        "coating-silicone",
+        "coating-acrylic",
+        "adhesive",
+        "fastener",
+        "primer",
+        "flashing",
+        "coating-liquid"
+      ],
+      "productCount": 20,
+      "completeness": 96
+    },
+    "Sika Sarnafil": {
+      "categories": [
+        "membrane-tpo",
+        "membrane-pvc",
+        "membrane-fleece",
+        "flashing",
+        "adhesive"
+      ],
+      "productCount": 8,
+      "completeness": 80
+    },
+    "Sika": {
+      "categories": [
+        "membrane-self-adhered-waterproofing",
+        "membrane-air-barrier",
+        "sealant",
+        "coating-liquid",
+        "air-barrier",
+        "adhesive"
+      ],
+      "productCount": 10,
+      "completeness": 85
+    },
+    "Tremco": {
+      "categories": [
+        "membrane-self-adhered-waterproofing",
+        "membrane-air-barrier",
+        "air-barrier",
+        "coating-silicone",
+        "coating-acrylic",
+        "coating-liquid",
+        "vapor-barrier",
+        "sealant",
+        "adhesive",
+        "primer",
+        "flashing"
+      ],
+      "productCount": 20,
+      "completeness": 92
+    },
+    "Tremco Roofing": {
+      "categories": [
+        "membrane-tpo",
+        "membrane-epdm",
+        "membrane-pvc",
+        "membrane-mod-bit",
+        "insulation-polyiso"
+      ],
+      "productCount": 6,
+      "completeness": 75
+    },
+    "Henry Company": {
+      "categories": [
+        "membrane-self-adhered-waterproofing",
+        "membrane-air-barrier",
+        "drainage-composite",
+        "air-barrier",
+        "coating-silicone",
+        "coating-acrylic",
+        "coating-liquid",
+        "sealant",
+        "primer"
+      ],
+      "productCount": 14,
+      "completeness": 88
+    },
+    "SOPREMA": {
+      "categories": [
+        "membrane-self-adhered-waterproofing",
+        "membrane-air-barrier",
+        "membrane-tpo",
+        "membrane-epdm",
+        "membrane-mod-bit",
+        "insulation-polyiso",
+        "coating-silicone",
+        "coating-acrylic",
+        "coating-liquid",
+        "vapor-barrier",
+        "sealant",
+        "adhesive",
+        "fastener",
+        "primer",
+        "flashing"
+      ],
+      "productCount": 20,
+      "completeness": 94
+    },
+    "Polyglass": {
+      "categories": [
+        "membrane-mod-bit",
+        "coating-acrylic",
+        "coating-liquid",
+        "vapor-barrier",
+        "primer",
+        "flashing"
+      ],
+      "productCount": 12,
+      "completeness": 80
+    },
+    "W.R. Meadows": {
+      "categories": [
+        "membrane-self-adhered-waterproofing",
+        "membrane-air-barrier",
+        "drainage-composite",
+        "air-barrier",
+        "coating-silicone",
+        "vapor-barrier",
+        "sealant",
+        "adhesive",
+        "primer",
+        "flashing"
+      ],
+      "productCount": 16,
+      "completeness": 90
+    },
+    "Mule-Hide": {
+      "categories": [
+        "membrane-epdm",
+        "membrane-pvc",
+        "membrane-fleece",
+        "membrane-mod-bit",
+        "coating-silicone",
+        "coating-acrylic",
+        "cover-board",
+        "vapor-barrier",
+        "adhesive",
+        "fastener",
+        "primer",
+        "flashing"
+      ],
+      "productCount": 16,
+      "completeness": 88
+    },
+    "Versico": {
+      "categories": [
+        "membrane-tpo",
+        "membrane-epdm",
+        "membrane-pvc",
+        "membrane-fleece",
+        "insulation-polyiso",
+        "cover-board",
+        "adhesive",
+        "flashing"
+      ],
+      "productCount": 12,
+      "completeness": 85
+    },
+    "Duro-Last": {
+      "categories": [
+        "membrane-tpo",
+        "membrane-pvc",
+        "membrane-fleece",
+        "coating-silicone",
+        "coating-acrylic",
+        "cover-board",
+        "vapor-barrier",
+        "adhesive",
+        "flashing"
+      ],
+      "productCount": 14,
+      "completeness": 86
+    },
+    "GenFlex": {
+      "categories": [
+        "membrane-tpo",
+        "membrane-epdm"
+      ],
+      "productCount": 2,
+      "completeness": 50
+    },
+    "IB Roof Systems": {
+      "categories": [
+        "membrane-tpo",
+        "membrane-pvc"
+      ],
+      "productCount": 4,
+      "completeness": 60
+    },
+    "CertainTeed": {
+      "categories": [
+        "membrane-mod-bit",
+        "substrate-gypsum"
+      ],
+      "productCount": 3,
+      "completeness": 55
+    },
+    "Owens Corning": {
+      "categories": [
+        "insulation-xps",
+        "air-barrier"
+      ],
+      "productCount": 5,
+      "completeness": 65
+    },
+    "Hunter Panels": {
+      "categories": [
+        "insulation-polyiso",
+        "cover-board"
+      ],
+      "productCount": 4,
+      "completeness": 70
+    },
+    "Atlas Roofing": {
+      "categories": [
+        "insulation-polyiso",
+        "insulation-xps",
+        "cover-board"
+      ],
+      "productCount": 4,
+      "completeness": 68
+    },
+    "Rmax": {
+      "categories": [
+        "insulation-polyiso"
+      ],
+      "productCount": 2,
+      "completeness": 55
+    },
+    "DuPont": {
+      "categories": [
+        "insulation-xps"
+      ],
+      "productCount": 3,
+      "completeness": 60
+    },
+    "Kingspan": {
+      "categories": [
+        "insulation-xps"
+      ],
+      "productCount": 2,
+      "completeness": 55
+    },
+    "Georgia-Pacific": {
+      "categories": [
+        "cover-board",
+        "substrate-gypsum",
+        "substrate-wood",
+        "air-barrier"
+      ],
+      "productCount": 6,
+      "completeness": 75
+    },
+    "USG": {
+      "categories": [
+        "cover-board",
+        "substrate-gypsum"
+      ],
+      "productCount": 3,
+      "completeness": 65
+    }
+  },
+  "categoryStats": {
+    "membrane-self-adhered-waterproofing": { "productCount": 20, "manufacturerCount": 8 },
+    "membrane-air-barrier": { "productCount": 19, "manufacturerCount": 9 },
+    "membrane-tpo": { "productCount": 19, "manufacturerCount": 12 },
+    "membrane-tpo-roofing": { "productCount": 7, "manufacturerCount": 7 },
+    "membrane-epdm": { "productCount": 15, "manufacturerCount": 10 },
+    "membrane-pvc": { "productCount": 16, "manufacturerCount": 11 },
+    "membrane-mod-bit": { "productCount": 18, "manufacturerCount": 9 },
+    "membrane-fleece": { "productCount": 14, "manufacturerCount": 9 },
+    "drainage-composite": { "productCount": 13, "manufacturerCount": 6 },
+    "insulation-polyiso": { "productCount": 19, "manufacturerCount": 10 },
+    "insulation-xps": { "productCount": 12, "manufacturerCount": 6 },
+    "coating-silicone": { "productCount": 15, "manufacturerCount": 11 },
+    "coating-acrylic": { "productCount": 15, "manufacturerCount": 10 },
+    "coating-liquid": { "productCount": 15, "manufacturerCount": 10 },
+    "air-barrier": { "productCount": 16, "manufacturerCount": 11 },
+    "cover-board": { "productCount": 14, "manufacturerCount": 10 },
+    "vapor-barrier": { "productCount": 14, "manufacturerCount": 10 },
+    "sealant": { "productCount": 20, "manufacturerCount": 11 },
+    "adhesive": { "productCount": 17, "manufacturerCount": 11 },
+    "fastener": { "productCount": 15, "manufacturerCount": 9 },
+    "primer": { "productCount": 16, "manufacturerCount": 10 },
+    "flashing": { "productCount": 17, "manufacturerCount": 11 },
+    "substrate-concrete": { "productCount": 4, "manufacturerCount": 1 },
+    "substrate-cmu": { "productCount": 4, "manufacturerCount": 1 },
+    "substrate-steel": { "productCount": 6, "manufacturerCount": 5 },
+    "substrate-wood": { "productCount": 6, "manufacturerCount": 5 },
+    "substrate-gypsum": { "productCount": 5, "manufacturerCount": 4 },
+    "substrate-aluminum": { "productCount": 4, "manufacturerCount": 4 }
+  }
+}
