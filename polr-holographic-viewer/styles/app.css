@@ -726,6 +726,58 @@ body {
   color: var(--cyan-dim);
 }
 
+/* DNA Layer Styles */
+.layer-item-container {
+  margin-bottom: 4px;
+}
+
+.layer-item {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.layer-item:hover {
+  background: rgba(0, 255, 255, 0.05);
+}
+
+.layer-item--expanded {
+  background: rgba(0, 255, 255, 0.08);
+  border-left: 2px solid var(--cyan-primary);
+  padding-left: 8px;
+  margin-left: -10px;
+}
+
+.layer-dna-indicator {
+  font-size: 12px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.layer-item:hover .layer-dna-indicator {
+  opacity: 1;
+}
+
+/* DNA Material Badge in Header */
+.dna-material-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 8px 16px;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 4px;
+  margin-right: 12px;
+}
+
+.dna-material-badge .badge-value {
+  color: #A78BFA;
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+}
+
+.header-right {
+  gap: 12px;
+}
+
 .show-panel-btn {
   position: absolute;
   right: 0;

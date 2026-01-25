@@ -87,6 +87,9 @@ export interface CompatibilityResult {
 // =============================================================================
 
 export interface MaterialDNA {
+  // Identity
+  id: string;               // Unique identifier for this material
+
   // Tiers 1-6: Classification
   division: string;         // CSI MasterFormat division
   category: string;         // Product category
