@@ -236,4 +236,103 @@ See FILE_MANIFEST.md for complete list.
 
 ---
 
+## Session: 2026-01-25 - Construction DNA Pipeline (L0-CMD-2026-0125-005)
+
+### Objective
+Create data pipeline connecting Construction DNA materials to POLR Holographic Viewer.
+
+### Mission
+- Enable import of DNA JSON/ZIP files into POLR
+- Use DNA material properties for 3D visualization
+- Display 20-tier DNA data in layer panels
+
+### Files Created
+
+| File | Location | Purpose |
+|------|----------|---------|
+| dna-adapter.ts | adapters/ | POLRMaterial type and DNA → POLR conversion |
+| dna-import.ts | services/ | JSON/ZIP file import with validation |
+| dna-material-store.ts | stores/ | Zustand persistence with localStorage |
+| dna-to-three.ts | utils/ | Three.js material conversion from DNA |
+| DNAImportButton.tsx | components/ | File upload UI with notifications |
+| LayerDNAPanel.tsx | components/ | Expandable layer DNA details |
+| SpecSheetLink.tsx | components/ | External spec sheet links |
+
+### Pipeline Architecture
+
+```
+Construction DNA (JSON/ZIP)
+       ↓
+DNA Adapter (convert to POLR format)
+       ↓
+Import Service (load files)
+       ↓
+Zustand Store (persist materials)
+       ↓
+3D Renderer (visual properties)
+       ↓
+UI Components (layer panel, import button)
+```
+
+### Integration Points
+
+1. **Header**: DNAImportButton added for file uploads
+2. **Header**: DNA material count badge shows imported count
+3. **Layer Stack**: Click layers to expand DNA details
+4. **DNA Panel**: Shows chemistry, properties, failure modes
+5. **Spec Links**: Direct links to manufacturer spec sheets
+
+### Status: COMPLETE
+- TypeScript: No errors
+- Tests: 79/79 passing
+
+---
+
+## Session: 2026-01-25 - Equivalency Database Expansion (L0-CMD-2026-0125-008)
+
+### Objective
+Expand PRODUCT_EQUIVALENCIES database from ~116 to 334 products.
+
+### Targets Met
+- ✓ 15+ manufacturers per material category
+- ✓ 100% equivalency score achievable for any major manufacturer pair
+- ✓ Zero "no product for X" warnings for top 10 manufacturers
+- ✓ All 27 material categories have 10+ manufacturer options
+
+### Expansion Summary
+
+| Metric | Before | After | Change |
+|--------|--------|-------|--------|
+| Total Products | ~116 | 334 | +218 |
+| Material Categories | 21 | 27 | +6 |
+| Avg Products/Category | 5.5 | 12.4 | +6.9 |
+| Tier 1 Manufacturers | 10 | 10 | Complete |
+| Tier 2 Manufacturers | 10 | 18 | +8 |
+| Tier 3 Manufacturers | 4 | 12 | +8 |
+
+### New Categories Added
+
+| Category | Products |
+|----------|----------|
+| substrate-concrete | 4 |
+| substrate-cmu | 4 |
+| substrate-steel | 6 |
+| substrate-wood | 6 |
+| substrate-gypsum | 5 |
+| substrate-aluminum | 4 |
+
+### Documentation Created
+
+| File | Purpose |
+|------|---------|
+| data/manufacturer-coverage.json | Complete coverage matrix |
+| docs/equivalency-scoring.md | Scoring methodology (0.85-1.0 scale) |
+
+### Status: COMPLETE
+- TypeScript: No errors
+- Tests: 79/79 passing
+- All success criteria met
+
+---
+
 *Last Updated: 2026-01-25*

@@ -61,3 +61,41 @@ These files are ready for future integration:
 3. Complete comparison visualization logic
 4. Deploy widget to CDN
 5. Implement REST API backend
+
+---
+
+## Files Created: L0-CMD-2026-0125-005 (DNA Pipeline)
+
+| Filename | Location | Purpose |
+|----------|----------|---------|
+| dna-adapter.ts | adapters/ | POLRMaterial type + DNA conversion |
+| dna-import.ts | services/ | JSON/ZIP file import with validation |
+| dna-material-store.ts | stores/ | Zustand persistence store |
+| dna-to-three.ts | utils/ | Three.js material conversion |
+| DNAImportButton.tsx | components/ | File upload UI |
+| LayerDNAPanel.tsx | components/ | Layer DNA details panel |
+| SpecSheetLink.tsx | components/ | Spec sheet external links |
+
+## Files Created/Modified: L0-CMD-2026-0125-008 (Equivalency Expansion)
+
+| Filename | Location | Status |
+|----------|----------|--------|
+| or-equal-comparison.ts | features/ | MODIFIED - 334 products, 27 categories |
+| manufacturer-coverage.json | data/ | NEW - Coverage matrix |
+| equivalency-scoring.md | docs/ | NEW - Scoring methodology |
+| PROGRESS.md | .validkernel/L0-CMD-2026-0125-008/ | NEW - Progress tracking |
+
+## Current File Statistics
+
+| Metric | Count |
+|--------|-------|
+| Total Source Files | ~45 |
+| Test Files | 3 |
+| Documentation Files | 8 |
+| Products in Database | 334 |
+| Material Categories | 27 |
+| Manufacturers | 28+ |
+
+---
+
+*Last Updated: 2026-01-25*
