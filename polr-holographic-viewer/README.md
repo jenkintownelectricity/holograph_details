@@ -19,6 +19,12 @@ Semantic:    500-2000 bytes of structured parameters
 Compression: 2,500:1 to 5,600:1 ratio
 ```
 
+### Latest Additions (v1.2.0)
+
+- **Construction DNA Integration** - Import 20-tier material DNA from JSON/ZIP files
+- **Expanded Equivalency Database** - 334 products across 27 categories from 28+ manufacturers
+- **Or-Equal Comparison Visualization** - Side-by-side and overlay comparison modes
+
 ## Features
 
 ### Semantic Compression
@@ -26,6 +32,25 @@ Compression: 2,500:1 to 5,600:1 ratio
 - Layer stack definitions with materials
 - Connection and joint specifications
 - Product references (GCP products)
+
+### Construction DNA Integration
+- Import material data from Construction DNA JSON/ZIP files
+- 20-tier material DNA with chemistry, properties, failure modes
+- Zustand-powered persistent storage (localStorage)
+- Three.js material conversion from DNA properties
+- Layer panel shows expanded DNA details with spec sheet links
+
+### Or-Equal Comparison System
+- **334 products** across **27 material categories**
+- **28+ manufacturers** with confidence scoring (0.85-1.0)
+- Comparison modes: side-by-side and overlay
+- Auto-substitution recommendations based on equivalency scores
+- Categories include:
+  - Membranes (TPO, EPDM, PVC, Mod-Bit, Self-Adhered)
+  - Insulation (Polyiso, XPS)
+  - Coatings (Silicone, Acrylic, Liquid-Applied)
+  - Accessories (Sealants, Adhesives, Fasteners, Primers, Flashing)
+  - Substrates (Concrete, CMU, Steel, Wood, Gypsum, Aluminum)
 
 ### 3D Model Generation
 - Real-time mesh generation from semantic data
@@ -66,7 +91,10 @@ Compression: 2,500:1 to 5,600:1 ratio
 - **Three.js 0.160** - WebGL 3D rendering
 - **TypeScript 5** - Type-safe development
 - **Vite 5** - Build tool
+- **Zustand 5** - State management with localStorage persistence
+- **JSZip** - ZIP file processing for DNA imports
 - **WebXR** - AR/VR support
+- **Vitest** - Testing framework (79 tests passing)
 
 ## Getting Started
 
@@ -126,10 +154,22 @@ polr-holographic-viewer/
 ├── schemas/
 │   └── semantic-detail.ts        # Core semantic compression schema
 ├── data/
-│   └── sample-details.ts         # Sample construction details
+│   ├── sample-details.ts         # Sample construction details
+│   └── manufacturer-coverage.json # Manufacturer coverage matrix
+├── docs/
+│   ├── PATENT_DOCUMENTATION.md   # Patent claims documentation
+│   └── equivalency-scoring.md    # Scoring methodology
 ├── hologram/
 │   ├── semantic-to-mesh.ts       # 3D mesh generator
 │   └── holographic-renderer.ts   # WebGL renderer with effects
+├── adapters/
+│   └── dna-adapter.ts            # Construction DNA → POLR converter
+├── services/
+│   └── dna-import.ts             # DNA JSON/ZIP import service
+├── stores/
+│   └── dna-material-store.ts     # Zustand DNA material state
+├── utils/
+│   └── dna-to-three.ts           # DNA → Three.js material converter
 ├── materials/
 │   ├── index.ts                  # Barrel export
 │   ├── base-materials.ts         # Core material definitions
@@ -146,7 +186,7 @@ polr-holographic-viewer/
 │   └── post-processing.ts        # SSAO, bloom, SMAA
 ├── features/
 │   ├── index.ts                  # Barrel export
-│   ├── or-equal-comparison.ts    # Manufacturer equivalency system
+│   ├── or-equal-comparison.ts    # 334 products, 27 categories
 │   └── spec-integration.ts       # CSI specification generation
 ├── embed/
 │   ├── index.ts                  # Barrel export
@@ -157,7 +197,10 @@ polr-holographic-viewer/
 ├── components/
 │   ├── ComparisonPanel.tsx       # OR-Equal UI component
 │   ├── LightingPanel.tsx         # Lighting preset selector
-│   └── ZipUpload.tsx             # Assembly upload component
+│   ├── ZipUpload.tsx             # Assembly upload component
+│   ├── DNAImportButton.tsx       # DNA file upload UI
+│   ├── LayerDNAPanel.tsx         # Layer DNA details panel
+│   └── SpecSheetLink.tsx         # Manufacturer spec sheet links
 ├── demos/
 │   ├── index.ts                  # Barrel export
 │   └── ManufacturerComparison.tsx # Demo: Compare manufacturers
@@ -214,7 +257,22 @@ polr-holographic-viewer/
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## New Features (v1.1.0)
+## New Features (v1.2.0)
+
+### Construction DNA Integration (L0-CMD-2026-0125-005)
+- **DNA Import** - Upload JSON/ZIP files from Construction DNA repository
+- **Material Store** - Zustand-powered persistence with localStorage
+- **3D Visualization** - DNA chemistry mapped to Three.js material properties
+- **Layer Details** - Expandable panels showing 20-tier material DNA
+- **Spec Sheet Links** - Direct links to manufacturer specification sheets
+
+### Expanded Equivalency Database (L0-CMD-2026-0125-008)
+- **334 Products** - Up from ~116 products (188% increase)
+- **27 Categories** - Added 6 substrate types
+- **Confidence Scoring** - 0.85-1.0 scale for equivalency recommendations
+- **Documentation** - Full scoring methodology in `docs/equivalency-scoring.md`
+
+## Features (v1.1.0)
 
 ### Track A: Photorealistic Rendering
 - **Texture Library** - Hybrid procedural/AI/photo texture system with 25+ materials
@@ -222,21 +280,31 @@ polr-holographic-viewer/
 - **Material Categories** - Membranes, insulation, concrete, metal, sealants, drainage
 
 ### Track B: Patentable Features
-- **Or-Equal Comparison** - Compare products across manufacturers (GCP, Carlisle, Sika, Tremco, etc.)
+- **Or-Equal Comparison** - Compare products across 28+ manufacturers
 - **Specification Integration** - CSI 3-part spec generation (coming soon)
 - **Embeddable Widget** - For manufacturer websites (coming soon)
 - **REST API** - Programmatic access (coming soon)
 
-### Manufacturer Support
-Currently supports product mapping for:
-- GCP Applied Technologies
-- Carlisle CCW
-- Sika
-- Tremco
-- W.R. Meadows
-- Henry Company
-- Firestone/Holcim Elevate
-- DuPont (DOW)
+### Manufacturer Support (28+ Manufacturers)
+
+**Tier 1 - Major National Manufacturers:**
+- Carlisle SynTec (24 products, 98% coverage)
+- Johns Manville (22 products, 97% coverage)
+- GAF (20 products, 96% coverage)
+- GCP Applied Technologies (18 products, 95% coverage)
+- Firestone (18 products, 95% coverage)
+- SOPREMA (20 products, 94% coverage)
+- Tremco (20 products, 92% coverage)
+
+**Tier 2 - Regional/Specialty:**
+- W.R. Meadows, Henry Company, Mule-Hide, Versico, Duro-Last
+- Polyglass, Sika, Sika Sarnafil, Carlisle CCW
+
+**Tier 3 - Category Specialists:**
+- Hunter Panels, Atlas Roofing, Rmax (Insulation)
+- Georgia-Pacific, USG, CertainTeed (Substrates)
+- Owens Corning, DuPont, Kingspan (XPS)
+- GenFlex, IB Roof Systems (Membranes)
 
 ## Future Roadmap
 
@@ -281,4 +349,28 @@ MIT License - BuildingSystems.ai × Lefebvre Design Solutions
 
 ## Command Reference
 
-This prototype was built per **L0-CMD-2026-0121-012** under ValidKernel governance.
+This prototype was built under **ValidKernel L0 Governance**:
+
+| Command ID | Description | Status |
+|------------|-------------|--------|
+| L0-CMD-2026-0121-012 | Initial holographic viewer prototype | Complete |
+| L0-CMD-2026-0125-001 | Track A/B module integration | Complete |
+| L0-CMD-2026-0125-003 | Or-Equal comparison visualization | Complete |
+| L0-CMD-2026-0125-004 | MaterialType mapping + DNA integration | Complete |
+| L0-CMD-2026-0125-005 | Construction DNA to POLR data pipeline | Complete |
+| L0-CMD-2026-0125-008 | Equivalency database expansion (334 products) | Complete |
+
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Watch mode
+npm run test:watch
+```
+
+**Current Status:** 79 tests passing
