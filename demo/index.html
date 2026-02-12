@@ -5,835 +5,1030 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>3D BIM Detail Viewer — Roofing &amp; Waterproofing</title>
 <style>
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-:root {
-  --primary: #1a365d;
-  --primary-light: #2d4a7c;
-  --accent: #2563eb;
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --text: #1e293b;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
-  --sidebar-w: 320px;
-  --header-h: 56px;
-  --footer-h: 36px;
-}
-
-html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
-
-/* HEADER */
-.header {
-  height: var(--header-h);
-  background: var(--primary);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  z-index: 10;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-.header h1 { font-size: 16px; font-weight: 600; letter-spacing: 1.5px; }
-.header .subtitle { font-size: 11px; color: #94a3b8; letter-spacing: 0.5px; }
-
-/* MAIN LAYOUT */
-.main { display: flex; height: calc(100vh - var(--header-h) - var(--footer-h)); }
-
-/* SIDEBAR */
-.sidebar {
-  width: var(--sidebar-w);
-  min-width: var(--sidebar-w);
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-.sidebar-section { padding: 16px; border-bottom: 1px solid var(--border); }
-.sidebar-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px; }
-
-/* QUICK FILTERS */
-.filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
-.filter-btn {
-  padding: 5px 12px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.filter-btn:hover { border-color: var(--accent); color: var(--accent); }
-.filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-/* LAYER ITEMS */
-.layer-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid #f1f5f9;
-  cursor: pointer;
-  transition: background 0.1s;
-  border-radius: 4px;
-  padding-left: 4px;
-  padding-right: 4px;
-}
-.layer-item:hover { background: #f8fafc; }
-.layer-item:last-child { border-bottom: none; }
-.layer-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-  flex-shrink: 0;
-  border: 1px solid rgba(0,0,0,0.1);
-}
-.layer-info { flex: 1; min-width: 0; }
-.layer-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.layer-detail { font-size: 11px; color: var(--text-muted); }
-.layer-gcp { font-size: 9px; background: #dbeafe; color: #1d4ed8; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
-
-.layer-toggle {
-  position: relative;
-  width: 36px;
-  height: 20px;
-  flex-shrink: 0;
-}
-.layer-toggle input { opacity: 0; width: 0; height: 0; }
-.layer-toggle .slider {
-  position: absolute;
-  inset: 0;
-  background: #cbd5e1;
-  border-radius: 10px;
-  transition: background 0.2s;
-  cursor: pointer;
-}
-.layer-toggle .slider::after {
-  content: '';
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #fff;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.2s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-.layer-toggle input:checked + .slider { background: var(--accent); }
-.layer-toggle input:checked + .slider::after { transform: translateX(16px); }
-
-/* VIEW CONTROLS */
-.control-row { display: flex; gap: 6px; flex-wrap: wrap; }
-.control-btn {
-  flex: 1;
-  min-width: 80px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-align: center;
-}
-.control-btn:hover { border-color: var(--accent); color: var(--accent); }
-.control-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
-/* VIEWER */
-.viewer {
-  flex: 1;
-  position: relative;
-  background: linear-gradient(180deg, #f0f4f8 0%, #e2e8f0 100%);
-}
-.viewer canvas { display: block; }
-.viewer-hint {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 11px;
-  color: var(--text-muted);
-  background: rgba(255,255,255,0.85);
-  padding: 4px 14px;
-  border-radius: 12px;
-  pointer-events: none;
-}
-
-/* TOOLTIP */
-.tooltip {
-  position: absolute;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 12px;
-  pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  z-index: 20;
-  display: none;
-  max-width: 240px;
-}
-.tooltip .tt-name { font-weight: 600; margin-bottom: 4px; }
-.tooltip .tt-detail { color: var(--text-muted); line-height: 1.4; }
-
-/* FOOTER */
-.footer {
-  height: var(--footer-h);
-  background: var(--primary);
-  color: #94a3b8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  letter-spacing: 0.5px;
-}
-.footer a { color: #94a3b8; text-decoration: none; }
-.footer a:hover { color: #fff; }
-
-/* ABOUT MODAL */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--surface);
-  border-radius: 12px;
-  padding: 28px 32px;
-  max-width: 520px;
-  width: 90%;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-}
-.modal h2 { font-size: 18px; margin-bottom: 12px; }
-.modal p { font-size: 13px; line-height: 1.6; color: var(--text-muted); margin-bottom: 10px; }
-.modal .close-btn {
-  margin-top: 16px;
-  padding: 8px 20px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .sidebar { width: 260px; min-width: 260px; }
-  :root { --sidebar-w: 260px; }
-}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#1a365d;--accent:#2563eb;--bg:#f8fafc;--surface:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--panel-w:300px;--hdr:48px;--ftr:32px}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;font-size:13px}
+.hdr{height:var(--hdr);background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px;box-shadow:0 2px 8px rgba(0,0,0,.15);z-index:10}
+.hdr h1{font-size:13px;font-weight:700;letter-spacing:1.5px;font-family:'Courier New',monospace}
+.hdr .sub{font-size:10px;color:#94a3b8;letter-spacing:.5px}
+.hdr-right{font-size:10px;color:#94a3b8;text-align:right}
+.main{display:flex;height:calc(100vh - var(--hdr) - var(--ftr))}
+.panel{width:var(--panel-w);min-width:var(--panel-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+.panel::-webkit-scrollbar{width:5px}
+.panel::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+.psec{padding:10px 12px;border-bottom:1px solid var(--border)}
+.psec h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;font-weight:700}
+.btn-row{display:flex;gap:4px;flex-wrap:wrap}
+.fbtn{padding:4px 10px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.fbtn:hover{border-color:var(--accent);color:var(--accent)}
+.fbtn.act{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cbtn{flex:1;min-width:55px;padding:5px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-size:10px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+.cbtn:hover{border-color:var(--accent);color:var(--accent)}
+.cbtn.act{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cam-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+.cam-grid .cbtn{min-width:0;padding:4px 2px;font-size:9px}
+.lyr-item{display:flex;align-items:center;gap:6px;padding:5px 4px;border-bottom:1px solid #f1f5f9;cursor:pointer;border-radius:3px;transition:background .1s}
+.lyr-item:hover{background:#f8fafc}
+.lyr-color{width:14px;height:14px;border-radius:2px;flex-shrink:0;border:1px solid rgba(0,0,0,.1)}
+.lyr-info{flex:1;min-width:0}
+.lyr-name{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lyr-sub{font-size:10px;color:var(--muted)}
+.gcp-badge{font-size:8px;background:#dbeafe;color:#1d4ed8;padding:0 5px;border-radius:6px;font-weight:700;margin-left:4px}
+.eye-btn{width:28px;height:20px;border:1px solid var(--border);border-radius:3px;background:var(--surface);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.eye-btn.on{background:#dbeafe;border-color:#93c5fd;color:#1d4ed8}
+.eye-btn.off{background:#f1f5f9;color:#94a3b8}
+.mat-sel{width:100%;padding:3px 4px;border:1px solid var(--border);border-radius:3px;font-size:10px;background:var(--surface);color:var(--text);margin-top:3px;cursor:pointer}
+.thk-row{display:flex;gap:2px;margin-top:3px;flex-wrap:wrap}
+.thk-btn{padding:2px 6px;border:1px solid var(--border);border-radius:3px;font-size:9px;cursor:pointer;background:var(--surface);color:var(--text)}
+.thk-btn.act{background:var(--accent);color:#fff;border-color:var(--accent)}
+.seq-row{display:flex;align-items:center;gap:6px;margin-top:4px}
+.seq-row input[type=range]{flex:1;height:4px}
+.seq-label{font-size:10px;color:var(--muted);min-width:120px}
+.viewport{flex:1;position:relative;background:linear-gradient(180deg,#f0f4f8,#e2e8f0)}
+.viewport canvas{display:block}
+.vp-hint{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted);background:rgba(255,255,255,.85);padding:3px 12px;border-radius:10px;pointer-events:none}
+.ftr{height:var(--ftr);background:var(--primary);color:#94a3b8;display:flex;align-items:center;justify-content:center;font-size:9px;letter-spacing:.5px;gap:8px}
+.product-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 24px;box-shadow:0 16px 48px rgba(0,0,0,.15);z-index:200;display:none;max-width:420px;width:90%}
+.product-popup h3{font-size:15px;font-weight:700;color:var(--primary);margin-bottom:8px}
+.product-popup .pp-field{font-size:11px;color:var(--muted);margin-bottom:4px;line-height:1.5}
+.product-popup .pp-field b{color:var(--text)}
+.pp-close{position:absolute;top:10px;right:14px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:199;display:none}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:300}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:10px;padding:24px 28px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal h2{font-size:16px;margin-bottom:10px}
+.modal p{font-size:12px;line-height:1.6;color:var(--muted);margin-bottom:8px}
+.modal .close-btn{margin-top:12px;padding:6px 18px;background:var(--accent);color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px}
+.add-layer-btn{width:100%;padding:6px;border:1px dashed var(--border);border-radius:4px;background:var(--surface);color:var(--accent);font-size:11px;cursor:pointer;margin-top:6px;font-weight:600}
+.add-layer-btn:hover{background:#eff6ff;border-color:var(--accent)}
 </style>
 </head>
 <body>
-
-<div class="header">
-  <div>
-    <h1>3D BIM DETAIL VIEWER &mdash; ROOFING &amp; WATERPROOFING</h1>
-    <div class="subtitle">Parapet Wall Assembly &bull; 10 Layers</div>
-  </div>
-  <div style="display:flex;gap:10px;align-items:center;">
-    <button class="filter-btn" onclick="openAbout()" style="color:#94a3b8;border-color:#475569;">About</button>
-  </div>
+<div class="hdr">
+<div><h1>3D BIM DETAIL VIEWER &mdash; ROOFING &amp; WATERPROOFING</h1><div class="sub">Parapet Wall Assembly &bull; Configurable Layers</div></div>
+<div class="hdr-right">Prototype &mdash; Lefebvre Design Solutions / ValidKernel<br><a href="#" onclick="openAbout();return false" style="color:#64748b">About / License</a></div>
 </div>
-
 <div class="main">
-  <div class="sidebar">
-    <div class="sidebar-section">
-      <h3>Quick Filters</h3>
-      <div class="filter-row">
-        <button class="filter-btn active" id="filterAll" onclick="filterAll()">All</button>
-        <button class="filter-btn" id="filterNone" onclick="filterNone()">None</button>
-        <button class="filter-btn" id="filterGCP" onclick="filterGCP()">GCP Only</button>
-      </div>
-    </div>
-    <div class="sidebar-section">
-      <h3>View Controls</h3>
-      <div class="control-row">
-        <button class="control-btn" id="btnExplode" onclick="toggleExplode()">Exploded</button>
-        <button class="control-btn" id="btnSection" onclick="toggleSection()">Section Cut</button>
-      </div>
-      <div class="control-row" style="margin-top:6px;">
-        <button class="control-btn" onclick="resetCamera()">Reset View</button>
-        <button class="control-btn" onclick="topView()">Top View</button>
-      </div>
-    </div>
-    <div class="sidebar-section" style="flex:1;">
-      <h3>Layers</h3>
-      <div id="layerList"></div>
-    </div>
-  </div>
-
-  <div class="viewer" id="viewerContainer">
-    <div class="tooltip" id="tooltip">
-      <div class="tt-name" id="ttName"></div>
-      <div class="tt-detail" id="ttDetail"></div>
-    </div>
-    <div class="viewer-hint">Click + drag to orbit &bull; Scroll to zoom &bull; Right-click to pan</div>
-  </div>
+<div class="panel" id="panel"></div>
+<div class="viewport" id="vp">
+<div class="vp-hint">Drag to orbit &bull; Scroll to zoom &bull; Right-click to pan</div>
 </div>
-
-<div class="footer">
-  3D BIM Detail Viewer&trade; &mdash; &copy; 2026 Lefebvre Design Solutions LLC / ValidKernel &mdash;
-  <a href="#" onclick="openAbout();return false;">License Info</a>
 </div>
-
-<!-- About Modal -->
+<div class="ftr">
+<span>VALIDKERNEL &copy; 2026 &mdash; INFRASTRUCTURE FIRST. BORING BY DESIGN.</span>
+<span>3D BIM Detail Viewer&trade; &mdash; Lefebvre Design Solutions LLC</span>
+</div>
+<div class="overlay" id="overlay" onclick="closeProductPopup()"></div>
+<div class="product-popup" id="productPopup">
+<button class="pp-close" onclick="closeProductPopup()">&times;</button>
+<h3 id="ppName"></h3>
+<div class="pp-field"><b>Manufacturer:</b> <span id="ppMfr"></span></div>
+<div class="pp-field"><b>CSI:</b> <span id="ppCSI"></span></div>
+<div class="pp-field"><b>Application:</b> <span id="ppApp"></span></div>
+<div class="pp-field"><b>Substrates:</b> <span id="ppSub"></span></div>
+<div class="pp-field"><b>Notes:</b> <span id="ppNotes"></span></div>
+</div>
 <div class="modal-overlay" id="aboutModal">
-  <div class="modal">
-    <h2>3D BIM Detail Viewer&trade;</h2>
-    <p><strong>Version:</strong> SaaS Preview &mdash; Parapet Detail Demo</p>
-    <p>3D BIM Detail Viewer&trade; is a trademark of Lefebvre Design Solutions LLC / ValidKernel.</p>
-    <p><strong>Dual License:</strong><br>
-    <em>Open License (Free):</em> Released for public, educational, open-source, and government purposes. Attribution required.<br>
-    <em>Commercial License:</em> Revenue-generating use requires separate commercial license. Contact Lefebvre Design Solutions LLC.</p>
-    <p style="font-size:11px;">All deployments operate under ValidKernel deterministic trust infrastructure with RuleBind license enforcement and StrictRun execution logging.</p>
-    <button class="close-btn" onclick="closeAbout()">Close</button>
-  </div>
+<div class="modal">
+<h2>3D BIM Detail Viewer&trade;</h2>
+<p><b>Version:</b> Construction-Realistic SaaS Preview</p>
+<p>3D BIM Detail Viewer&trade; is a trademark of Lefebvre Design Solutions LLC / ValidKernel.</p>
+<p><b>Dual License:</b><br><em>Open License (Free):</em> Released for public, educational, open-source, and government purposes. Attribution required.<br><em>Commercial License:</em> Revenue-generating use requires separate commercial license. Contact Lefebvre Design Solutions LLC.</p>
+<p style="font-size:10px">All deployments operate under ValidKernel deterministic trust infrastructure with RuleBind license enforcement and StrictRun execution logging.</p>
+<button class="close-btn" onclick="closeAbout()">Close</button>
 </div>
-
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// ===== LAYER DATA =====
-const LAYERS = [
-  { id: 1,  name: "Structural Deck",    color: "#888888", thickness: 0.30, y: 0.00,  product: "Concrete or steel deck",      gcp: false, csi: "03 30 00" },
-  { id: 2,  name: "Vapor Retarder",      color: "#4488CC", thickness: 0.02, y: 0.30,  product: "Below insulation",            gcp: false, csi: "07 26 00" },
-  { id: 3,  name: "Insulation (Polyiso)", color: "#FFCC00", thickness: 0.15, y: 0.32,  product: "Tapered at roof edge, 3\"",   gcp: false, csi: "07 22 00" },
-  { id: 4,  name: "Cover Board",         color: "#CCCCCC", thickness: 0.03, y: 0.47,  product: "Gypsum or HD polyiso, 0.5\"", gcp: false, csi: "07 22 16" },
-  { id: 5,  name: "Roofing Membrane",    color: "#333333", thickness: 0.04, y: 0.50,  product: "GCP \u2014 2-ply base + cap sheet",  gcp: true,  csi: "07 51 13" },
-  { id: 6,  name: "Parapet Wall",        color: "#D4B896", thickness: 0.20, y: 0.00,  product: "CMU or steel stud, 36\u201348\"",   gcp: false, csi: "04 22 00", isWall: true },
-  { id: 7,  name: "Air Barrier",         color: "#228B22", thickness: 0.01, y: 0.00,  product: "GCP Perm-A-Barrier\u00AE",           gcp: true,  csi: "07 27 00", isBarrier: true },
-  { id: 8,  name: "Metal Coping",        color: "#C0C0C0", thickness: 0.04, y: 1.80,  product: "Drip edges both sides",       gcp: false, csi: "07 71 00", isCoping: true },
-  { id: 9,  name: "Counter-Flashing",    color: "#808080", thickness: 0.02, y: 1.20,  product: "Reglet, overlaps 4\"",         gcp: false, csi: "07 62 00", isFlashing: true },
-  { id: 10, name: "Sealant",             color: "#CC3333", thickness: 0.02, y: 1.78,  product: "At reglet + coping joints",   gcp: false, csi: "07 92 00", isSealant: true }
+'use strict';
+// ============================================================
+// 1. PROCEDURAL TEXTURE ENGINE
+// ============================================================
+const TEX_CACHE={};
+function makeTex(key,fn,size){
+if(TEX_CACHE[key])return TEX_CACHE[key];
+const s=size||256,c=document.createElement('canvas');
+c.width=s;c.height=s;
+const ctx=c.getContext('2d');
+fn(ctx,s);
+const t=new THREE.CanvasTexture(c);
+t.wrapS=t.wrapT=THREE.RepeatWrapping;
+TEX_CACHE[key]=t;return t;
+}
+function noise(ctx,s,count,minV,maxV,minR,maxR){
+for(let i=0;i<count;i++){
+const x=Math.random()*s,y=Math.random()*s;
+const v=minV+Math.random()*(maxV-minV);
+ctx.fillStyle=`rgb(${v},${v},${v})`;
+ctx.beginPath();ctx.arc(x,y,minR+Math.random()*(maxR-minR),0,6.28);ctx.fill();
+}}
+function texConcrete(){return makeTex('concrete',function(ctx,s){
+ctx.fillStyle='#B4B4AF';ctx.fillRect(0,0,s,s);
+noise(ctx,s,2000,150,200,0.5,2.5);
+noise(ctx,s,600,130,170,0.3,1);
+});}
+function texSteelDeck(){return makeTex('steelDeck',function(ctx,s){
+ctx.fillStyle='#C8CCD0';ctx.fillRect(0,0,s,s);
+for(let x=0;x<s;x+=32){
+const g=ctx.createLinearGradient(x,0,x+32,0);
+g.addColorStop(0,'#B8BCC0');g.addColorStop(0.3,'#D8DDE2');g.addColorStop(0.7,'#D8DDE2');g.addColorStop(1,'#B8BCC0');
+ctx.fillStyle=g;ctx.fillRect(x,0,32,s);
+}
+noise(ctx,s,300,180,210,0.3,0.8);
+});}
+function texPlywood(){return makeTex('plywood',function(ctx,s){
+ctx.fillStyle='#C4A66A';ctx.fillRect(0,0,s,s);
+for(let y=0;y<s;y+=2){
+ctx.strokeStyle=`rgba(${139+Math.random()*30},${100+Math.random()*20},${60+Math.random()*15},${0.15+Math.random()*0.15})`;
+ctx.lineWidth=1+Math.random();
+ctx.beginPath();ctx.moveTo(0,y+Math.random()*2);ctx.lineTo(s,y+Math.random()*2);ctx.stroke();
+}
+for(let i=0;i<3;i++){const kx=Math.random()*s,ky=Math.random()*s;
+ctx.fillStyle='rgba(160,110,50,0.3)';ctx.beginPath();ctx.ellipse(kx,ky,4+Math.random()*6,8+Math.random()*10,Math.random()*3.14,0,6.28);ctx.fill();}
+});}
+function texGypsum(){return makeTex('gypsum',function(ctx,s){
+ctx.fillStyle='#E8E4DC';ctx.fillRect(0,0,s,s);
+noise(ctx,s,1500,210,235,0.3,1);
+});}
+function texPolyisoFoil(){return makeTex('polyisoFoil',function(ctx,s){
+ctx.fillStyle='#D4A843';ctx.fillRect(0,0,s,s);
+noise(ctx,s,1000,180,220,0.5,2);
+ctx.fillStyle='#C0C0C0';ctx.fillRect(0,0,s,4);
+ctx.fillStyle='#C0C0C0';ctx.fillRect(0,s-4,s,4);
+for(let i=0;i<800;i++){ctx.fillStyle=`rgba(200,170,60,${0.1+Math.random()*0.15})`;const x=Math.random()*s,y=4+Math.random()*(s-8);ctx.fillRect(x,y,2+Math.random()*3,1+Math.random()*2);}
+});}
+function texPolyisoPaper(){return makeTex('polyisoPaper',function(ctx,s){
+ctx.fillStyle='#D4A843';ctx.fillRect(0,0,s,s);
+noise(ctx,s,1000,180,220,0.5,2);
+ctx.fillStyle='#8B6914';ctx.fillRect(0,0,s,6);
+ctx.fillStyle='#8B6914';ctx.fillRect(0,s-6,s,6);
+});}
+function texXPS(){return makeTex('xps',function(ctx,s){
+ctx.fillStyle='#4488CC';ctx.fillRect(0,0,s,s);
+noise(ctx,s,500,80,140,0.5,1.5);
+for(let i=0;i<200;i++){ctx.fillStyle=`rgba(60,120,200,${0.1+Math.random()*0.1})`;ctx.fillRect(Math.random()*s,Math.random()*s,3+Math.random()*5,1);}
+});}
+function texEPS(){return makeTex('eps',function(ctx,s){
+ctx.fillStyle='#F0F0F0';ctx.fillRect(0,0,s,s);
+for(let i=0;i<3000;i++){const x=Math.random()*s,y=Math.random()*s,r=1+Math.random()*2.5;
+ctx.fillStyle=`rgba(${220+Math.random()*30},${220+Math.random()*30},${220+Math.random()*30},0.8)`;
+ctx.beginPath();ctx.arc(x,y,r,0,6.28);ctx.fill();
+ctx.strokeStyle='rgba(180,180,180,0.3)';ctx.lineWidth=0.3;ctx.stroke();}
+});}
+function texMineralWool(){return makeTex('mineralWool',function(ctx,s){
+ctx.fillStyle='#7A8B5A';ctx.fillRect(0,0,s,s);
+for(let y=0;y<s;y+=1){ctx.strokeStyle=`rgba(${90+Math.random()*60},${100+Math.random()*50},${60+Math.random()*40},0.3)`;
+ctx.lineWidth=0.5+Math.random();ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(s,y+Math.random()*4-2);ctx.stroke();}
+});}
+function texCMU(){return makeTex('cmu',function(ctx,s){
+ctx.fillStyle='#B8B8B4';ctx.fillRect(0,0,s,s);
+noise(ctx,s,800,160,200,0.5,1.5);
+const bw=s/2,bh=s/4,mj=3;
+ctx.strokeStyle='#999';ctx.lineWidth=mj;
+for(let r=0;r<4;r++){const y=r*bh;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(s,y);ctx.stroke();
+const off=(r%2)*bw/2;
+for(let c=off;c<s;c+=bw){ctx.beginPath();ctx.moveTo(c,y);ctx.lineTo(c,y+bh);ctx.stroke();}
+// Per-block color variation
+for(let c=off;c<s;c+=bw){const bv=Math.random()*15-7;
+ctx.fillStyle=`rgba(${184+bv},${184+bv},${180+bv},0.3)`;ctx.fillRect(c+mj/2,y+mj/2,bw-mj,bh-mj);}}
+},512);}
+function texBrick(){return makeTex('brick',function(ctx,s){
+ctx.fillStyle='#8B4513';ctx.fillRect(0,0,s,s);
+const bw=s/4,bh=s/8,mj=3;
+ctx.strokeStyle='#C0B8A8';ctx.lineWidth=mj;
+for(let r=0;r<8;r++){const y=r*bh;
+ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(s,y);ctx.stroke();
+const off=(r%2)*bw/2;
+for(let c=off-bw;c<s+bw;c+=bw){
+ctx.beginPath();ctx.moveTo(c,y);ctx.lineTo(c,y+bh);ctx.stroke();
+const bv=Math.random()*40-20;
+ctx.fillStyle=`rgba(${139+bv},${69+bv/2},${19+bv/3},0.7)`;ctx.fillRect(c+mj/2,y+mj/2,bw-mj,bh-mj);
+}}
+},512);}
+function texMetalPanel(){return makeTex('metalPanel',function(ctx,s){
+ctx.fillStyle='#505560';ctx.fillRect(0,0,s,s);
+for(let y=0;y<s;y++){ctx.fillStyle=`rgba(${70+Math.random()*20},${75+Math.random()*20},${85+Math.random()*20},0.3)`;ctx.fillRect(0,y,s,1);}
+ctx.strokeStyle='#2A2E35';ctx.lineWidth=2;
+for(let x=0;x<s;x+=s/4){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,s);ctx.stroke();}
+});}
+function texMembraneSA(base){return makeTex('membSA_'+base,function(ctx,s){
+ctx.fillStyle=base;ctx.fillRect(0,0,s,s);
+noise(ctx,s,400,20,60,0.3,1);
+ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=2;
+for(let y=0;y<s;y+=s/4){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(s,y);ctx.stroke();}
+});}
+function texTPO(){return makeTex('tpo',function(ctx,s){
+ctx.fillStyle='#F0F0F0';ctx.fillRect(0,0,s,s);
+noise(ctx,s,300,230,250,0.3,1);
+ctx.strokeStyle='rgba(180,180,180,0.4)';ctx.lineWidth=3;
+ctx.beginPath();ctx.moveTo(0,s*0.75);ctx.lineTo(s,s*0.75);ctx.stroke();
+});}
+function texEPDM(){return makeTex('epdm',function(ctx,s){
+ctx.fillStyle='#1A1A1A';ctx.fillRect(0,0,s,s);
+noise(ctx,s,500,10,40,0.3,1.5);
+});}
+function texSBS(){return makeTex('sbs',function(ctx,s){
+ctx.fillStyle='#2A2A2A';ctx.fillRect(0,0,s,s);
+for(let i=0;i<4000;i++){const v=30+Math.random()*60;ctx.fillStyle=`rgb(${v},${v},${v})`;
+ctx.fillRect(Math.random()*s,Math.random()*s,1+Math.random()*3,1+Math.random()*2);}
+});}
+function texBUR(){return makeTex('bur',function(ctx,s){
+ctx.fillStyle='#1E1E1E';ctx.fillRect(0,0,s,s);
+for(let y=0;y<s;y+=s/4){ctx.fillStyle=`rgba(${60+Math.random()*20},${55+Math.random()*20},${50+Math.random()*20},0.5)`;ctx.fillRect(0,y,s,3);}
+noise(ctx,s,600,15,45,0.3,1);
+});}
+function texMetal(clr){return makeTex('metal_'+clr,function(ctx,s){
+const c=new THREE.Color(clr);
+ctx.fillStyle=clr;ctx.fillRect(0,0,s,s);
+for(let y=0;y<s;y++){const v=Math.random()*0.06-0.03;
+ctx.fillStyle=`rgba(${Math.round((c.r+v)*255)},${Math.round((c.g+v)*255)},${Math.round((c.b+v)*255)},0.5)`;ctx.fillRect(0,y,s,1);}
+});}
+function texSealant(){return makeTex('sealant',function(ctx,s){
+ctx.fillStyle='#1A1A1A';ctx.fillRect(0,0,s,s);
+noise(ctx,s,200,10,30,0.5,1.5);
+});}
+function texStucco(){return makeTex('stucco',function(ctx,s){
+ctx.fillStyle='#D4C8A0';ctx.fillRect(0,0,s,s);
+noise(ctx,s,3000,180,220,0.3,1.5);
+});}
+function texFiberCement(){return makeTex('fiberCement',function(ctx,s){
+ctx.fillStyle='#E0E0E0';ctx.fillRect(0,0,s,s);
+for(let y=0;y<s;y+=s/6){ctx.fillStyle='rgba(0,0,0,0.06)';ctx.fillRect(0,y,s,2);
+ctx.fillStyle='rgba(0,0,0,0.02)';ctx.fillRect(0,y+2,s,s/6-2);}
+for(let y=0;y<s;y++){ctx.strokeStyle=`rgba(150,150,150,${0.03+Math.random()*0.03})`;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(s,y+Math.random()*2);ctx.stroke();}
+});}
+function texPerlite(){return makeTex('perlite',function(ctx,s){
+ctx.fillStyle='#EDE8D8';ctx.fillRect(0,0,s,s);
+for(let i=0;i<2000;i++){const v=200+Math.random()*50;
+ctx.fillStyle=`rgb(${v},${v-5},${v-15})`;
+ctx.beginPath();ctx.arc(Math.random()*s,Math.random()*s,0.5+Math.random()*2,0,6.28);ctx.fill();}
+});}
+function texDrainageMat(){return makeTex('drainMat',function(ctx,s){
+ctx.fillStyle='#1A1A1A';ctx.fillRect(0,0,s,s);
+for(let x=0;x<s;x+=12){for(let y=0;y<s;y+=12){
+ctx.fillStyle='#2D8B57';ctx.beginPath();ctx.arc(x+6,y+6,4,0,6.28);ctx.fill();}}
+});}
+function texSoil(){return makeTex('soil',function(ctx,s){
+ctx.fillStyle='#6B4423';ctx.fillRect(0,0,s,s);
+noise(ctx,s,2000,60,120,0.5,2.5);
+for(let i=0;i<100;i++){ctx.fillStyle=`rgba(${80+Math.random()*40},${50+Math.random()*30},${20+Math.random()*20},0.4)`;
+ctx.fillRect(Math.random()*s,Math.random()*s,2+Math.random()*6,1+Math.random()*3);}
+});}
+function texGlass(){return makeTex('glass',function(ctx,s){
+const g=ctx.createLinearGradient(0,0,s,s);
+g.addColorStop(0,'#7BA7CC');g.addColorStop(0.5,'#9EC4E0');g.addColorStop(1,'#7BA7CC');
+ctx.fillStyle=g;ctx.fillRect(0,0,s,s);
+ctx.strokeStyle='#5580A0';ctx.lineWidth=3;
+ctx.beginPath();ctx.moveTo(s/2,0);ctx.lineTo(s/2,s);ctx.stroke();
+ctx.beginPath();ctx.moveTo(0,s/2);ctx.lineTo(s,s/2);ctx.stroke();
+});}
+function texGeo(){return makeTex('geo',function(ctx,s){
+ctx.fillStyle='#E8E8E8';ctx.fillRect(0,0,s,s);
+for(let x=0;x<s;x+=4){for(let y=0;y<s;y+=4){
+ctx.fillStyle=`rgba(${200+Math.random()*50},${200+Math.random()*50},${200+Math.random()*50},0.5)`;ctx.fillRect(x,y,3,3);}}
+});}
+function texPaver(){return makeTex('paver',function(ctx,s){
+ctx.fillStyle='#A09888';ctx.fillRect(0,0,s,s);
+noise(ctx,s,1500,140,180,0.5,2);
+ctx.strokeStyle='#808070';ctx.lineWidth=2;
+const ps=s/4;for(let x=0;x<s;x+=ps){for(let y=0;y<s;y+=ps){ctx.strokeRect(x+1,y+1,ps-2,ps-2);}}
+});}
+function texBallast(){return makeTex('ballast',function(ctx,s){
+ctx.fillStyle='#888880';ctx.fillRect(0,0,s,s);
+for(let i=0;i<400;i++){const v=100+Math.random()*80,r=3+Math.random()*8;
+ctx.fillStyle=`rgb(${v},${v-5},${v-10})`;ctx.beginPath();
+ctx.ellipse(Math.random()*s,Math.random()*s,r,r*0.7,Math.random()*3.14,0,6.28);ctx.fill();
+ctx.strokeStyle='rgba(0,0,0,0.15)';ctx.lineWidth=0.5;ctx.stroke();}
+});}
+function texVegetation(){return makeTex('veg',function(ctx,s){
+ctx.fillStyle='#6B4423';ctx.fillRect(0,0,s,s);noise(ctx,s,1000,60,110,0.5,2);
+ctx.fillStyle='#228B22';ctx.fillRect(0,0,s,s/2);
+for(let i=0;i<500;i++){const g=Math.random()*100;ctx.fillStyle=`rgb(${20+g*0.4},${100+g},${20+g*0.3})`;
+ctx.beginPath();ctx.arc(Math.random()*s,Math.random()*s/2,2+Math.random()*5,0,6.28);ctx.fill();}
+});}
+
+// ============================================================
+// 2. GCP PRODUCT DATABASE
+// ============================================================
+const GCP_PRODUCTS={
+VPS30:{full:"PERM-A-BARRIER\u00AE VPS 30",mfr:"Saint-Gobain / GCP Applied Technologies",csi:"07 27 26 \u2014 Self-Adhered Air Barriers",app:"Self-adhered sheet membrane on exterior sheathing",sub:"Exterior gypsum sheathing, concrete, plywood",notes:"Vapor semi-permeable (30 perms). Primer: PERM-A-BARRIER\u00AE WB Primer. Min temp: 25\u00B0F."},
+NPL10:{full:"PERM-A-BARRIER\u00AE NPL 10",mfr:"Saint-Gobain / GCP Applied Technologies",csi:"07 27 26 \u2014 Self-Adhered Air Barriers",app:"Self-adhered membrane on concrete masonry units",sub:"CMU, concrete block, masonry",notes:"Non-permeable (0.10 perms). For CMU backup. Primer: PERM-A-BARRIER\u00AE WB Primer."},
+NPS:{full:"PERM-A-BARRIER\u00AE NPS Detail Membrane",mfr:"Saint-Gobain / GCP Applied Technologies",csi:"07 27 26",app:"Transitions, penetrations, corners",sub:"All with appropriate primer",notes:"Stretchable detail membrane for complex geometry."},
+SBS_GCP:{full:"GCP Modified Bitumen Roofing",mfr:"Saint-Gobain / GCP Applied Technologies",csi:"07 51 13 \u2014 Modified Bituminous Membrane Roofing",app:"2-ply SBS modified bitumen: base sheet + mineral cap sheet",sub:"Approved cover boards, insulation",notes:"Torch-applied or cold-adhesive. GCP product."},
+BITUTHENE_LM:{full:"BITUTHENE\u00AE Liquid Membrane",mfr:"Saint-Gobain / GCP Applied Technologies",csi:"07 14 00",app:"Liquid-applied waterproofing/detailing compound",sub:"Concrete, CMU, primed surfaces",notes:"Detail areas and transitions."},
+};
+
+// ============================================================
+// 3. LAYER DEFINITIONS
+// ============================================================
+const S=0.05; // scale: units per inch
+const MIN_D=0.012;
+function iu(inches){return Math.max(inches*S,MIN_D);}
+const ROOF_W=2.0,ROOF_D=2.4;
+
+const LAYERS=[
+// --- ROOF LAYERS (stack vertically) ---
+{id:'deck',name:'Structural Deck',order:1,type:'roof',enabled:true,vi:0,ti:0,
+variants:[
+{name:'Concrete Deck',thk:[6],color:'#B4B4AF',tex:texConcrete,r:0.9,m:0,csi:'03 30 00',product:'Cast-in-place or precast concrete',gcp:false},
+{name:'Steel Deck (Fluted)',thk:[1.5],color:'#C8CCD0',tex:texSteelDeck,r:0.4,m:0.6,csi:'05 31 00',product:'1.5" or 3" fluted steel deck',gcp:false,fluted:true},
+{name:'Plywood Deck',thk:[0.75],color:'#C4A66A',tex:texPlywood,r:0.85,m:0,csi:'06 16 00',product:'3/4" CDX plywood',gcp:false},
+{name:'Gypsum Deck',thk:[0.625],color:'#E8E4DC',tex:texGypsum,r:0.85,m:0,csi:'03 52 00',product:'DensDeck / Securock',gcp:false},
+]},
+{id:'vapor',name:'Vapor Retarder',order:2,type:'roof',enabled:false,vi:0,ti:0,
+variants:[
+{name:'Polyethylene Sheet',thk:[0.125],color:'#2A2A2A',tex:function(){return texMembraneSA('#2A2A2A')},r:0.4,m:0,csi:'07 26 00',product:'6mil poly vapor retarder',gcp:false},
+{name:'Primer Coat',thk:[0.0625],color:'#5C3A1E',tex:function(){return texMembraneSA('#5C3A1E')},r:0.5,m:0,csi:'07 26 00',product:'Liquid-applied primer coat',gcp:false},
+{name:'Self-Adhered VR',thk:[0.125],color:'#1A1A2E',tex:function(){return texMembraneSA('#1A1A2E')},r:0.35,m:0,csi:'07 26 00',product:'Self-adhered vapor retarder',gcp:false},
+]},
+{id:'insulation',name:'Insulation',order:3,type:'roof',enabled:true,vi:0,ti:2,
+variants:[
+{name:'Polyiso \u2014 Foil Faced',thk:[1.5,2,2.5,3,4,4.5,6],color:'#D4A843',tex:texPolyisoFoil,r:0.7,m:0.1,csi:'07 22 00',product:'Foil-faced polyisocyanurate',gcp:false},
+{name:'Polyiso \u2014 Paper Faced',thk:[1.5,2,2.5,3,4,4.5,6],color:'#D4A843',tex:texPolyisoPaper,r:0.8,m:0,csi:'07 22 00',product:'Kraft paper faced polyiso',gcp:false},
+{name:'XPS (Extruded Polystyrene)',thk:[1,1.5,2,3,4],color:'#4488CC',tex:texXPS,r:0.75,m:0,csi:'07 22 00',product:'Blue XPS rigid board',gcp:false},
+{name:'EPS (Expanded Polystyrene)',thk:[1,2,3,4],color:'#F0F0F0',tex:texEPS,r:0.85,m:0,csi:'07 22 00',product:'White EPS bead board',gcp:false},
+{name:'Mineral Wool',thk:[1.5,2,3,4],color:'#7A8B5A',tex:texMineralWool,r:0.95,m:0,csi:'07 22 00',product:'Roxul/Rockwool rigid board',gcp:false},
+]},
+{id:'insulation2',name:'Insulation Layer 2',order:3.5,type:'roof',enabled:false,vi:0,ti:1,
+variants:[
+{name:'Polyiso \u2014 Foil Faced',thk:[1.5,2,2.5,3,4,4.5,6],color:'#D4A843',tex:texPolyisoFoil,r:0.7,m:0.1,csi:'07 22 00',product:'Second layer polyiso (staggered joints)',gcp:false},
+{name:'Polyiso \u2014 Paper Faced',thk:[1.5,2,2.5,3,4],color:'#D4A843',tex:texPolyisoPaper,r:0.8,m:0,csi:'07 22 00',product:'Second layer paper-faced polyiso',gcp:false},
+{name:'XPS',thk:[1,1.5,2,3],color:'#4488CC',tex:texXPS,r:0.75,m:0,csi:'07 22 00',product:'Second layer XPS',gcp:false},
+]},
+{id:'coverboard',name:'Cover Board',order:4,type:'roof',enabled:true,vi:0,ti:1,
+variants:[
+{name:'SecuRock\u00AE (USG)',thk:[0.25,0.5,0.625],color:'#9E9E9E',tex:texGypsum,r:0.8,m:0,csi:'07 22 16',product:'Glass-mat faced gypsum',gcp:false},
+{name:'DensDeck Prime\u00AE',thk:[0.25,0.5,0.625],color:'#C8A951',tex:function(){return makeTex('ddp',function(ctx,s){ctx.fillStyle='#C8A951';ctx.fillRect(0,0,s,s);noise(ctx,s,800,170,210,0.3,1);})},r:0.7,m:0.05,csi:'07 22 16',product:'Factory-primed glass-mat gypsum',gcp:false},
+{name:'DensDeck\u00AE (Unprimed)',thk:[0.25,0.5,0.625],color:'#9E9E9E',tex:texGypsum,r:0.8,m:0,csi:'07 22 16',product:'Unprimed glass-mat gypsum',gcp:false},
+{name:'HD Polyiso Cover Board',thk:[0.25,0.5],color:'#D4A843',tex:texPolyisoFoil,r:0.7,m:0.1,csi:'07 22 16',product:'High-density polyiso',gcp:false},
+{name:'Perlite Board',thk:[0.5,0.75,1],color:'#EDE8D8',tex:texPerlite,r:0.9,m:0,csi:'07 22 16',product:'Perlite aggregate board',gcp:false},
+]},
+{id:'membrane',name:'Roofing Membrane',order:5,type:'roof',enabled:true,vi:2,ti:0,
+variants:[
+{name:'TPO Single-Ply',thk:[0.125],color:'#F0F0F0',tex:texTPO,r:0.4,m:0.1,csi:'07 54 23',product:'White TPO membrane, heat-welded seams',gcp:false},
+{name:'EPDM Single-Ply',thk:[0.125],color:'#1A1A1A',tex:texEPDM,r:0.7,m:0,csi:'07 53 23',product:'Black EPDM rubber membrane',gcp:false},
+{name:'SBS Modified Bitumen (2-ply)',thk:[0.5],color:'#2A2A2A',tex:texSBS,r:0.85,m:0,csi:'07 51 13',product:'GCP \u2014 2-ply base + cap sheet',gcp:true,gcpKey:'SBS_GCP'},
+{name:'BUR (Built-Up Roofing)',thk:[0.75],color:'#1E1E1E',tex:texBUR,r:0.8,m:0,csi:'07 51 00',product:'3-4 ply built-up roof system',gcp:false},
+{name:'Standing Seam Metal',thk:[0.125],color:'#808890',tex:function(){return texMetal('#808890')},r:0.3,m:0.7,csi:'07 61 00',product:'24ga snap-lock standing seam',gcp:false,seam:true},
+]},
+// --- OVERBURDEN LAYERS ---
+{id:'protection',name:'Protection/Slip Sheet',order:5.1,type:'roof',enabled:false,vi:0,ti:0,
+variants:[{name:'Geotextile Slip Sheet',thk:[0.125],color:'#E8E8E8',tex:texGeo,r:0.8,m:0,csi:'07 72 00',product:'Non-woven geotextile protection',gcp:false}]},
+{id:'drainage',name:'Drainage Mat',order:5.2,type:'roof',enabled:false,vi:0,ti:0,
+variants:[{name:'Dimpled HDPE',thk:[0.5],color:'#1A1A1A',tex:texDrainageMat,r:0.7,m:0,csi:'07 72 00',product:'Dimpled drainage mat',gcp:false}]},
+{id:'rootbarrier',name:'Root Barrier',order:5.3,type:'roof',enabled:false,vi:0,ti:0,
+variants:[{name:'Root Barrier Sheet',thk:[0.125],color:'#CC6600',tex:function(){return texMembraneSA('#CC6600')},r:0.5,m:0,csi:'07 72 00',product:'Heavy-duty root barrier',gcp:false}]},
+{id:'filterfab',name:'Filter Fabric',order:5.4,type:'roof',enabled:false,vi:0,ti:0,
+variants:[{name:'Non-Woven Geotextile',thk:[0.0625],color:'#E0E0E0',tex:texGeo,r:0.85,m:0,csi:'07 72 00',product:'Filter fabric geotextile',gcp:false}]},
+{id:'pavers',name:'Pavers on Pedestals',order:5.5,type:'overburden',enabled:false,vi:0,ti:0,
+variants:[{name:'Concrete Pavers',thk:[4],color:'#A09888',tex:texPaver,r:0.8,m:0,csi:'07 76 00',product:'2" pavers on adjustable pedestals',gcp:false}]},
+{id:'ballast',name:'Ballast (River Stone)',order:5.6,type:'roof',enabled:false,vi:0,ti:0,
+variants:[{name:'River Stone 1.5-2.5"',thk:[3],color:'#888880',tex:texBallast,r:0.9,m:0,csi:'07 72 00',product:'ASTM ballast stone',gcp:false}]},
+{id:'greenroof',name:'Green Roof Assembly',order:5.7,type:'overburden',enabled:false,vi:0,ti:0,
+variants:[{name:'Extensive Green Roof',thk:[7],color:'#228B22',tex:texVegetation,r:0.9,m:0,csi:'07 76 00',product:'Growing media + sedum vegetation',gcp:false}]},
+{id:'concrete_topping',name:'Concrete Topping',order:5.8,type:'roof',enabled:false,vi:0,ti:0,
+variants:[{name:'Concrete Traffic Deck',thk:[2,3,4],color:'#B4B4AF',tex:texConcrete,r:0.85,m:0,csi:'03 30 00',product:'Broom-finished concrete topping',gcp:false}]},
+// --- WALL LAYERS ---
+{id:'wall',name:'Parapet Wall',order:6,type:'wall',enabled:true,vi:0,ti:0,
+variants:[
+{name:'CMU (Concrete Masonry)',thk:[8],color:'#B8B8B4',tex:texCMU,r:0.85,m:0,csi:'04 22 00',product:'8" CMU with mortar joints',gcp:false},
+{name:'Steel Stud + Sheathing',thk:[7.25],color:'#C8CCD0',tex:texSteelDeck,r:0.5,m:0.3,csi:'05 41 00',product:'6" studs + 5/8" ext. sheathing',gcp:false},
+{name:'Poured Concrete',thk:[8,12],color:'#B0B0A8',tex:texConcrete,r:0.8,m:0,csi:'03 30 00',product:'Formed concrete parapet',gcp:false},
+{name:'Wood Framing',thk:[5.5],color:'#C4A66A',tex:texPlywood,r:0.85,m:0,csi:'06 11 00',product:'2x6 studs + plywood sheathing',gcp:false},
+]},
+{id:'airbarrier',name:'Air Barrier',order:7,type:'wallExterior',enabled:true,vi:0,ti:0,
+variants:[
+{name:'GCP Perm-A-Barrier\u00AE VPS 30',thk:[0.125],color:'#006B54',tex:function(){return texMembraneSA('#006B54')},r:0.5,m:0,csi:'07 27 26',product:'Self-adhered air barrier membrane',gcp:true,gcpKey:'VPS30'},
+{name:'GCP Perm-A-Barrier\u00AE NPL 10',thk:[0.125],color:'#004D3A',tex:function(){return texMembraneSA('#004D3A')},r:0.5,m:0,csi:'07 27 26',product:'Non-permeable membrane (CMU)',gcp:true,gcpKey:'NPL10'},
+{name:'GCP NPS Detail Membrane',thk:[0.125],color:'#008B6A',tex:function(){return texMembraneSA('#008B6A')},r:0.4,m:0,csi:'07 27 26',product:'Stretchable detail membrane',gcp:true,gcpKey:'NPS'},
+{name:'Fluid-Applied Air Barrier',thk:[0.125],color:'#3366AA',tex:function(){return texMembraneSA('#3366AA')},r:0.5,m:0,csi:'07 27 00',product:'Spray/roller applied air barrier',gcp:false},
+]},
+{id:'cladding',name:'Exterior Cladding',order:8,type:'cladExterior',enabled:true,vi:0,ti:0,
+variants:[
+{name:'Metal Panel',thk:[2],color:'#505560',tex:texMetalPanel,r:0.4,m:0.5,csi:'07 42 43',product:'Flat metal panels with reveals',gcp:false},
+{name:'Brick Veneer',thk:[4],color:'#8B4513',tex:texBrick,r:0.85,m:0,csi:'04 21 00',product:'Running bond brick veneer',gcp:false},
+{name:'Curtain Wall',thk:[5],color:'#7BA7CC',tex:texGlass,r:0.15,m:0.3,csi:'08 44 00',product:'Aluminum-framed curtain wall',gcp:false,transp:true},
+{name:'EIFS',thk:[3],color:'#D4C8A0',tex:texStucco,r:0.85,m:0,csi:'07 24 00',product:'EPS insulation + stucco finish',gcp:false},
+{name:'Fiber Cement Lap Siding',thk:[1],color:'#E0E0E0',tex:texFiberCement,r:0.8,m:0,csi:'07 46 00',product:'5/16" fiber cement lap siding',gcp:false},
+]},
+// --- ACCESSORY LAYERS ---
+{id:'coping',name:'Metal Coping',order:9,type:'coping',enabled:true,vi:0,ti:0,
+variants:[
+{name:'Aluminum Coping',thk:[0.05],color:'#C0C0C0',tex:function(){return texMetal('#C0C0C0')},r:0.3,m:0.6,csi:'07 71 00',product:'0.050" formed aluminum coping',gcp:false},
+{name:'Galvanized Steel Coping',thk:[0.05],color:'#A8A8A0',tex:function(){return texMetal('#A8A8A0')},r:0.4,m:0.5,csi:'07 71 00',product:'Galvanized steel coping cap',gcp:false},
+{name:'Dark Bronze Coping',thk:[0.05],color:'#4A3728',tex:function(){return texMetal('#4A3728')},r:0.35,m:0.5,csi:'07 71 00',product:'Anodized dark bronze aluminum',gcp:false},
+]},
+{id:'counterflash',name:'Counter-Flashing',order:10,type:'flashing',enabled:true,vi:0,ti:0,
+variants:[
+{name:'Surface-Mounted',thk:[0.02],color:'#808080',tex:function(){return texMetal('#808080')},r:0.45,m:0.4,csi:'07 62 00',product:'Face-nailed with sealant at top',gcp:false},
+{name:'Reglet (Embedded)',thk:[0.02],color:'#707070',tex:function(){return texMetal('#707070')},r:0.45,m:0.4,csi:'07 62 00',product:'Inserted in masonry reglet joint',gcp:false},
+{name:'Through-Wall Flashing',thk:[0.04],color:'#606060',tex:function(){return texMetal('#606060')},r:0.5,m:0.3,csi:'07 62 00',product:'Continuous through-wall membrane',gcp:false},
+]},
+{id:'baseflash',name:'Base Flashing',order:11,type:'baseflash',enabled:true,vi:0,ti:0,
+variants:[
+{name:'Membrane Base Flashing',thk:[0.125],color:'#2A2A2A',tex:texSBS,r:0.8,m:0,csi:'07 62 00',product:'Matches membrane, min 8" turn-up',gcp:false},
+]},
+{id:'sealant',name:'Sealants',order:12,type:'sealant',enabled:true,vi:0,ti:0,
+variants:[
+{name:'Polyurethane (Black)',thk:[0.25],color:'#1A1A1A',tex:texSealant,r:0.9,m:0,csi:'07 92 00',product:'At reglet, coping, term bar',gcp:false},
+{name:'Silicone (Clear/White)',thk:[0.25],color:'#E0E0E0',tex:function(){return makeTex('silicone',function(ctx,s){ctx.fillStyle='#E0E0E0';ctx.fillRect(0,0,s,s);noise(ctx,s,200,220,245,0.3,1);})},r:0.3,m:0,csi:'07 92 00',product:'At coping joints and air barrier',gcp:false},
+]},
 ];
 
-let layerVisibility = {};
-let layerGroups = {};
-let exploded = false;
-let sectionCut = false;
-let scene, camera, renderer, controls;
-let raycaster, mouse;
-let clippingPlane;
+// Custom layers array
+let customLayers=[];
+let nextCustomId=100;
 
-LAYERS.forEach(l => layerVisibility[l.id] = true);
+// ============================================================
+// 4. THREE.JS GLOBALS
+// ============================================================
+let scene,camera,renderer,raycaster,mouse,clippingPlane,grid;
+let layerMeshes={}; // id -> THREE.Group
+let animTarget={};  // animation targets
+let exploded=false,xrayMode=false,sectionMode=false,dimMode=false,seqMode=false,seqStep=99;
 
-// ===== INIT THREE.JS =====
-function init() {
-  const container = document.getElementById('viewerContainer');
-  const w = container.clientWidth;
-  const h = container.clientHeight;
+// Camera orbit state
+let orb={theta:Math.PI/4.5,phi:Math.PI/3.2,radius:5.5,tx:0.3,ty:0.8,tz:0};
+// Animation
+let orbTarget=null,orbAnimStart=0;
 
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xf0f4f8);
-
-  camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-  camera.position.set(3.5, 2.5, 3.5);
-  camera.lookAt(0, 0.7, 0);
-
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(w, h);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.localClippingEnabled = true;
-  container.insertBefore(renderer.domElement, container.firstChild);
-
-  // Lighting
-  const ambient = new THREE.AmbientLight(0xffffff, 0.5);
-  scene.add(ambient);
-
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  dirLight.position.set(5, 8, 5);
-  dirLight.castShadow = true;
-  dirLight.shadow.mapSize.set(1024, 1024);
-  dirLight.shadow.camera.near = 0.1;
-  dirLight.shadow.camera.far = 30;
-  dirLight.shadow.camera.left = -5;
-  dirLight.shadow.camera.right = 5;
-  dirLight.shadow.camera.top = 5;
-  dirLight.shadow.camera.bottom = -5;
-  scene.add(dirLight);
-
-  const fillLight = new THREE.DirectionalLight(0x8ecae6, 0.3);
-  fillLight.position.set(-3, 4, -2);
-  scene.add(fillLight);
-
-  // Ground grid
-  const grid = new THREE.GridHelper(8, 16, 0xd0d0d0, 0xe8e8e8);
-  grid.position.y = -0.01;
-  scene.add(grid);
-
-  // Clipping plane
-  clippingPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0.8);
-
-  // Raycaster for hover
-  raycaster = new THREE.Raycaster();
-  mouse = new THREE.Vector2();
-
-  buildLayers();
-  buildUI();
-  initOrbitControls();
-  animate();
-
-  window.addEventListener('resize', onResize);
-  container.addEventListener('mousemove', onMouseMove);
-  container.addEventListener('mouseleave', hideTooltip);
+// ============================================================
+// 5. SCENE SETUP
+// ============================================================
+function initScene(){
+const vp=document.getElementById('vp');
+const w=vp.clientWidth,h=vp.clientHeight;
+scene=new THREE.Scene();
+scene.background=new THREE.Color(0xf0f4f8);
+camera=new THREE.PerspectiveCamera(40,w/h,0.01,200);
+updateCameraFromOrb();
+renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(w,h);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.localClippingEnabled=true;
+vp.insertBefore(renderer.domElement,vp.firstChild);
+// Lighting
+scene.add(new THREE.AmbientLight(0xffffff,0.5));
+const dl=new THREE.DirectionalLight(0xffffff,0.8);
+dl.position.set(5,10,6);dl.castShadow=true;
+dl.shadow.mapSize.set(2048,2048);
+dl.shadow.camera.near=0.1;dl.shadow.camera.far=40;
+dl.shadow.camera.left=-6;dl.shadow.camera.right=6;
+dl.shadow.camera.top=6;dl.shadow.camera.bottom=-6;
+scene.add(dl);
+const fl=new THREE.DirectionalLight(0x8ecae6,0.3);
+fl.position.set(-4,5,-3);scene.add(fl);
+grid=new THREE.GridHelper(10,20,0xd0d0d0,0xe8e8e8);
+grid.position.y=-0.01;scene.add(grid);
+clippingPlane=new THREE.Plane(new THREE.Vector3(-1,0,0.3).normalize(),0.6);
+raycaster=new THREE.Raycaster();mouse=new THREE.Vector2();
+}
+function updateCameraFromOrb(){
+const sp=Math.sin(orb.phi);
+camera.position.set(
+orb.tx+orb.radius*sp*Math.sin(orb.theta),
+orb.ty+orb.radius*Math.cos(orb.phi),
+orb.tz+orb.radius*sp*Math.cos(orb.theta));
+camera.lookAt(orb.tx,orb.ty,orb.tz);
 }
 
-// ===== BUILD 3D LAYERS =====
-function buildLayers() {
-  LAYERS.forEach(layer => {
-    const group = new THREE.Group();
-    group.userData = { layerId: layer.id, layerName: layer.name, layerData: layer };
-
-    if (layer.isWall) {
-      buildParapetWall(group, layer);
-    } else if (layer.isBarrier) {
-      buildAirBarrier(group, layer);
-    } else if (layer.isCoping) {
-      buildCoping(group, layer);
-    } else if (layer.isFlashing) {
-      buildFlashing(group, layer);
-    } else if (layer.isSealant) {
-      buildSealant(group, layer);
-    } else {
-      buildRoofLayer(group, layer);
-    }
-
-    scene.add(group);
-    layerGroups[layer.id] = group;
-  });
-}
-
-function makeMat(color, opts = {}) {
-  return new THREE.MeshStandardMaterial({
-    color: new THREE.Color(color),
-    roughness: opts.roughness || 0.7,
-    metalness: opts.metalness || 0.0,
-    transparent: opts.transparent || false,
-    opacity: opts.opacity || 1.0,
-    side: THREE.DoubleSide,
-    clippingPlanes: sectionCut ? [clippingPlane] : []
-  });
-}
-
-function buildRoofLayer(group, layer) {
-  // Flat roof layer
-  const geo = new THREE.BoxGeometry(2.4, layer.thickness, 2.0);
-  const mesh = new THREE.Mesh(geo, makeMat(layer.color));
-  mesh.position.set(0, layer.y + layer.thickness / 2, 0);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  mesh.userData = { layerId: layer.id };
-  group.add(mesh);
-}
-
-function buildParapetWall(group, layer) {
-  // Vertical wall at the edge
-  const wallH = 1.8;
-  const geo = new THREE.BoxGeometry(layer.thickness, wallH, 2.0);
-  const mesh = new THREE.Mesh(geo, makeMat(layer.color));
-  mesh.position.set(1.2 + layer.thickness / 2, wallH / 2, 0);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  mesh.userData = { layerId: layer.id };
-  group.add(mesh);
-
-  // CMU lines
-  const lineColor = new THREE.Color(layer.color).multiplyScalar(0.8);
-  for (let row = 0; row < 9; row++) {
-    const lineGeo = new THREE.BoxGeometry(layer.thickness + 0.002, 0.005, 2.002);
-    const lineMesh = new THREE.Mesh(lineGeo, makeMat('#' + lineColor.getHexString()));
-    lineMesh.position.set(1.2 + layer.thickness / 2, 0.1 + row * 0.2, 0);
-    lineMesh.userData = { layerId: layer.id };
-    group.add(lineMesh);
-  }
-}
-
-function buildAirBarrier(group, layer) {
-  // Thin membrane on wall exterior
-  const wallH = 1.8;
-  const geo = new THREE.BoxGeometry(0.015, wallH, 2.0);
-  const mesh = new THREE.Mesh(geo, makeMat(layer.color, { roughness: 0.5 }));
-  mesh.position.set(1.2, wallH / 2, 0);
-  mesh.castShadow = true;
-  mesh.userData = { layerId: layer.id };
-  group.add(mesh);
-}
-
-function buildCoping(group, layer) {
-  // Metal cap on parapet top
-  const shape = new THREE.Shape();
-  shape.moveTo(-0.18, 0);
-  shape.lineTo(0.38, 0);
-  shape.lineTo(0.40, -0.06);
-  shape.lineTo(0.38, -0.10);
-  shape.lineTo(-0.16, -0.10);
-  shape.lineTo(-0.20, -0.06);
-  shape.closePath();
-
-  const extSettings = { depth: 2.0, bevelEnabled: false };
-  const geo = new THREE.ExtrudeGeometry(shape, extSettings);
-  const mesh = new THREE.Mesh(geo, makeMat(layer.color, { metalness: 0.5, roughness: 0.3 }));
-  mesh.position.set(1.1, layer.y, -1.0);
-  mesh.castShadow = true;
-  mesh.userData = { layerId: layer.id };
-  group.add(mesh);
-}
-
-function buildFlashing(group, layer) {
-  // Counter-flashing: vertical strip on wall
-  const geo = new THREE.BoxGeometry(0.01, 0.30, 2.0);
-  const mesh = new THREE.Mesh(geo, makeMat(layer.color, { metalness: 0.4, roughness: 0.4 }));
-  mesh.position.set(1.19, layer.y + 0.15, 0);
-  mesh.castShadow = true;
-  mesh.userData = { layerId: layer.id };
-  group.add(mesh);
-
-  // Horizontal lip
-  const lipGeo = new THREE.BoxGeometry(0.08, 0.008, 2.0);
-  const lipMesh = new THREE.Mesh(lipGeo, makeMat(layer.color, { metalness: 0.4 }));
-  lipMesh.position.set(1.15, layer.y, 0);
-  lipMesh.userData = { layerId: layer.id };
-  group.add(lipMesh);
-}
-
-function buildSealant(group, layer) {
-  // Sealant beads at coping joints
-  const mat = makeMat(layer.color, { roughness: 0.9 });
-
-  // Top sealant at coping
-  const geo1 = new THREE.BoxGeometry(0.04, 0.02, 2.0);
-  const m1 = new THREE.Mesh(geo1, mat);
-  m1.position.set(1.30, 1.80, 0);
-  m1.userData = { layerId: layer.id };
-  group.add(m1);
-
-  // Reglet sealant
-  const geo2 = new THREE.BoxGeometry(0.02, 0.04, 2.0);
-  const m2 = new THREE.Mesh(geo2, mat);
-  m2.position.set(1.19, 1.22, 0);
-  m2.userData = { layerId: layer.id };
-  group.add(m2);
-}
-
-// ===== ORBIT CONTROLS (inline, no import) =====
-function initOrbitControls() {
-  const el = renderer.domElement;
-  let isDown = false, isRight = false;
-  let prevX = 0, prevY = 0;
-  let spherical = { theta: Math.atan2(camera.position.x, camera.position.z), phi: Math.acos(camera.position.y / camera.position.distanceTo(new THREE.Vector3(0,0.7,0))), radius: camera.position.distanceTo(new THREE.Vector3(0,0.7,0)) };
-  let target = new THREE.Vector3(0, 0.7, 0);
-
-  function updateCamera() {
-    const sp = Math.sin(spherical.phi);
-    camera.position.set(
-      target.x + spherical.radius * sp * Math.sin(spherical.theta),
-      target.y + spherical.radius * Math.cos(spherical.phi),
-      target.z + spherical.radius * sp * Math.cos(spherical.theta)
-    );
-    camera.lookAt(target);
-  }
-
-  el.addEventListener('mousedown', e => {
-    isDown = true;
-    isRight = e.button === 2;
-    prevX = e.clientX;
-    prevY = e.clientY;
-  });
-
-  window.addEventListener('mouseup', () => { isDown = false; });
-
-  el.addEventListener('contextmenu', e => e.preventDefault());
-
-  window.addEventListener('mousemove', e => {
-    if (!isDown) return;
-    const dx = e.clientX - prevX;
-    const dy = e.clientY - prevY;
-    prevX = e.clientX;
-    prevY = e.clientY;
-
-    if (isRight) {
-      // Pan
-      const panSpeed = 0.003 * spherical.radius;
-      const right = new THREE.Vector3();
-      right.setFromMatrixColumn(camera.matrix, 0);
-      const up = new THREE.Vector3();
-      up.setFromMatrixColumn(camera.matrix, 1);
-      target.add(right.multiplyScalar(-dx * panSpeed));
-      target.add(up.multiplyScalar(dy * panSpeed));
-    } else {
-      // Orbit
-      spherical.theta -= dx * 0.005;
-      spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi + dy * 0.005));
-    }
-    updateCamera();
-  });
-
-  el.addEventListener('wheel', e => {
-    e.preventDefault();
-    spherical.radius *= e.deltaY > 0 ? 1.08 : 0.92;
-    spherical.radius = Math.max(1, Math.min(20, spherical.radius));
-    updateCamera();
-  }, { passive: false });
-
-  // Touch support
-  let touchDist = 0;
-  el.addEventListener('touchstart', e => {
-    if (e.touches.length === 1) {
-      isDown = true; isRight = false;
-      prevX = e.touches[0].clientX;
-      prevY = e.touches[0].clientY;
-    } else if (e.touches.length === 2) {
-      touchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-    }
-  });
-  el.addEventListener('touchmove', e => {
-    e.preventDefault();
-    if (e.touches.length === 1 && isDown) {
-      const dx = e.touches[0].clientX - prevX;
-      const dy = e.touches[0].clientY - prevY;
-      prevX = e.touches[0].clientX;
-      prevY = e.touches[0].clientY;
-      spherical.theta -= dx * 0.005;
-      spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi + dy * 0.005));
-      updateCamera();
-    } else if (e.touches.length === 2) {
-      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      spherical.radius *= touchDist / dist;
-      spherical.radius = Math.max(1, Math.min(20, spherical.radius));
-      touchDist = dist;
-      updateCamera();
-    }
-  }, { passive: false });
-  el.addEventListener('touchend', () => { isDown = false; });
-
-  // Store controls for external access
-  window._orbitControls = { spherical, target, updateCamera };
-}
-
-// ===== UI BUILDERS =====
-function buildUI() {
-  const list = document.getElementById('layerList');
-  list.innerHTML = '';
-
-  LAYERS.forEach(layer => {
-    const item = document.createElement('div');
-    item.className = 'layer-item';
-    item.innerHTML = `
-      <div class="layer-color" style="background:${layer.color}"></div>
-      <div class="layer-info">
-        <div class="layer-name">${layer.name} ${layer.gcp ? '<span class="layer-gcp">GCP</span>' : ''}</div>
-        <div class="layer-detail">${layer.product}</div>
-      </div>
-      <label class="layer-toggle">
-        <input type="checkbox" ${layerVisibility[layer.id] ? 'checked' : ''} onchange="toggleLayer(${layer.id}, this.checked)">
-        <span class="slider"></span>
-      </label>
-    `;
-    item.addEventListener('click', e => {
-      if (e.target.closest('.layer-toggle')) return;
-      highlightLayer(layer.id);
-    });
-    list.appendChild(item);
-  });
-}
-
-// ===== LAYER CONTROLS =====
-function toggleLayer(id, visible) {
-  layerVisibility[id] = visible;
-  if (layerGroups[id]) layerGroups[id].visible = visible;
-  updateFilterButtons();
-}
-
-function filterAll() {
-  LAYERS.forEach(l => { layerVisibility[l.id] = true; });
-  updateAll();
-}
-
-function filterNone() {
-  LAYERS.forEach(l => { layerVisibility[l.id] = false; });
-  updateAll();
-}
-
-function filterGCP() {
-  LAYERS.forEach(l => { layerVisibility[l.id] = l.gcp; });
-  updateAll();
-}
-
-function updateAll() {
-  LAYERS.forEach(l => {
-    if (layerGroups[l.id]) layerGroups[l.id].visible = layerVisibility[l.id];
-  });
-  // Update checkboxes
-  document.querySelectorAll('.layer-toggle input').forEach((cb, i) => {
-    cb.checked = layerVisibility[LAYERS[i].id];
-  });
-  updateFilterButtons();
-}
-
-function updateFilterButtons() {
-  const allOn = LAYERS.every(l => layerVisibility[l.id]);
-  const noneOn = LAYERS.every(l => !layerVisibility[l.id]);
-  const gcpOnly = LAYERS.every(l => layerVisibility[l.id] === l.gcp);
-
-  document.getElementById('filterAll').classList.toggle('active', allOn);
-  document.getElementById('filterNone').classList.toggle('active', noneOn);
-  document.getElementById('filterGCP').classList.toggle('active', gcpOnly && !allOn && !noneOn);
-}
-
-// ===== VIEW CONTROLS =====
-function toggleExplode() {
-  exploded = !exploded;
-  document.getElementById('btnExplode').classList.toggle('active', exploded);
-
-  LAYERS.forEach(layer => {
-    const group = layerGroups[layer.id];
-    if (!group) return;
-
-    const offset = exploded ? layer.id * 0.15 : 0;
-    if (layer.isWall || layer.isBarrier) {
-      // Move wall items horizontally
-      group.position.x = exploded ? layer.id * 0.08 : 0;
-      group.position.y = 0;
-    } else if (layer.isCoping || layer.isSealant) {
-      group.position.y = exploded ? offset + 0.5 : 0;
-    } else if (layer.isFlashing) {
-      group.position.y = exploded ? offset + 0.3 : 0;
-      group.position.x = exploded ? 0.15 : 0;
-    } else {
-      group.position.y = exploded ? offset : 0;
-    }
-  });
-}
-
-function toggleSection() {
-  sectionCut = !sectionCut;
-  document.getElementById('btnSection').classList.toggle('active', sectionCut);
-
-  // Rebuild materials with/without clipping
-  LAYERS.forEach(layer => {
-    const group = layerGroups[layer.id];
-    if (!group) return;
-    group.traverse(child => {
-      if (child.isMesh) {
-        child.material.clippingPlanes = sectionCut ? [clippingPlane] : [];
-        child.material.needsUpdate = true;
-      }
-    });
-  });
-}
-
-function resetCamera() {
-  const c = window._orbitControls;
-  c.spherical.theta = Math.PI / 4;
-  c.spherical.phi = Math.PI / 3.5;
-  c.spherical.radius = 5;
-  c.target.set(0, 0.7, 0);
-  c.updateCamera();
-}
-
-function topView() {
-  const c = window._orbitControls;
-  c.spherical.theta = 0;
-  c.spherical.phi = 0.1;
-  c.spherical.radius = 5;
-  c.target.set(0.5, 0, 0);
-  c.updateCamera();
-}
-
-// ===== HOVER / TOOLTIP =====
-function onMouseMove(event) {
-  const container = document.getElementById('viewerContainer');
-  const rect = container.getBoundingClientRect();
-  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-  raycaster.setFromCamera(mouse, camera);
-  const meshes = [];
-  scene.traverse(c => { if (c.isMesh && c.parent.visible) meshes.push(c); });
-  const hits = raycaster.intersectObjects(meshes);
-
-  const tooltip = document.getElementById('tooltip');
-  if (hits.length > 0) {
-    const lid = hits[0].object.userData.layerId;
-    if (lid) {
-      const layer = LAYERS.find(l => l.id === lid);
-      if (layer) {
-        document.getElementById('ttName').textContent = layer.name;
-        document.getElementById('ttDetail').innerHTML =
-          `${layer.product}<br>CSI: ${layer.csi}${layer.gcp ? '<br><strong style="color:#1d4ed8">GCP / Saint-Gobain Product</strong>' : ''}`;
-        tooltip.style.display = 'block';
-        tooltip.style.left = (event.clientX - rect.left + 16) + 'px';
-        tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
-        return;
-      }
-    }
-  }
-  tooltip.style.display = 'none';
-}
-
-function hideTooltip() {
-  document.getElementById('tooltip').style.display = 'none';
-}
-
-function highlightLayer(id) {
-  // Brief highlight flash
-  const group = layerGroups[id];
-  if (!group) return;
-  const origColors = [];
-  group.traverse(c => {
-    if (c.isMesh) {
-      origColors.push({ mesh: c, color: c.material.color.getHex() });
-      c.material.color.setHex(0x2563eb);
-      c.material.emissive = new THREE.Color(0x2563eb);
-      c.material.emissiveIntensity = 0.3;
-    }
-  });
-  setTimeout(() => {
-    origColors.forEach(({ mesh, color }) => {
-      mesh.material.color.setHex(color);
-      mesh.material.emissive = new THREE.Color(0x000000);
-      mesh.material.emissiveIntensity = 0;
-    });
-  }, 600);
-}
-
-// ===== ABOUT MODAL =====
-function openAbout() { document.getElementById('aboutModal').classList.add('open'); }
-function closeAbout() { document.getElementById('aboutModal').classList.remove('open'); }
-document.getElementById('aboutModal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeAbout();
+// ============================================================
+// 6. MATERIAL FACTORY
+// ============================================================
+function buildMat(variant,clipping){
+const t=(typeof variant.tex==='function')?variant.tex():variant.tex;
+if(t&&t.repeat){t.repeat.set(2,2);}
+const mat=new THREE.MeshStandardMaterial({
+color:new THREE.Color(variant.color),
+map:t||null,
+roughness:variant.r!==undefined?variant.r:0.7,
+metalness:variant.m||0,
+side:THREE.DoubleSide,
+transparent:!!variant.transp||(xrayMode),
+opacity:variant.transp?0.35:(xrayMode?0.25:1),
+clippingPlanes:clipping||[],
 });
-
-// ===== ANIMATION LOOP =====
-function animate() {
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
+return mat;
 }
 
-function onResize() {
-  const container = document.getElementById('viewerContainer');
-  const w = container.clientWidth;
-  const h = container.clientHeight;
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-  renderer.setSize(w, h);
+// ============================================================
+// 7. GEOMETRY BUILDERS
+// ============================================================
+function getLayerThickness(layer){
+const v=layer.variants[layer.vi];
+const thk=v.thk[layer.ti]||v.thk[0];
+return thk;
+}
+function getDisplayThk(layer){return iu(getLayerThickness(layer));}
+
+function computeRoofY(){
+// Returns map: layerId -> computed Y bottom position
+const yMap={};
+const roofLayers=getAllLayers().filter(l=>l.type==='roof'||l.type==='overburden').sort((a,b)=>a.order-b.order);
+let y=0;
+for(const l of roofLayers){
+if(!l.enabled){yMap[l.id]=y;continue;}
+yMap[l.id]=y;
+y+=getDisplayThk(l);
+}
+return yMap;
 }
 
-// ===== START =====
-init();
+function getAllLayers(){return LAYERS.concat(customLayers);}
+
+function rebuildScene(){
+// Remove old meshes
+Object.values(layerMeshes).forEach(g=>{scene.remove(g);
+g.traverse(c=>{if(c.geometry)c.geometry.dispose();if(c.material){if(c.material.map)c.material.map.dispose();c.material.dispose();}});
+});
+layerMeshes={};
+const clip=sectionMode?[clippingPlane]:[];
+const yMap=computeRoofY();
+
+// Wall geometry info
+const wallLayer=getAllLayers().find(l=>l.id==='wall');
+const wallThk=wallLayer?iu(getLayerThickness(wallLayer)):iu(8);
+const wallH=iu(48); // 48 inches
+const wallX=ROOF_W/2; // right edge of roof
+
+getAllLayers().forEach(layer=>{
+if(!layer.enabled&&!seqMode)return;
+if(seqMode&&layer.order>seqStep)return;
+const g=new THREE.Group();
+g.userData={layerId:layer.id,layerName:layer.name};
+const v=layer.variants[layer.vi];
+const mat=buildMat(v,clip);
+
+if(layer.type==='roof'||layer.type==='overburden'){
+const h=getDisplayThk(layer);
+const yBottom=yMap[layer.id]||0;
+if(v.fluted){
+// Steel deck with flute profile
+const fluteW=0.12,fluteH=h,flatW=0.08;
+const shape=new THREE.Shape();
+let cx=0;
+shape.moveTo(0,0);
+for(let i=0;i<10;i++){
+shape.lineTo(cx,0);shape.lineTo(cx,fluteH);
+cx+=fluteW;shape.lineTo(cx,fluteH);shape.lineTo(cx,0);
+cx+=flatW;
+}
+shape.lineTo(cx,0);shape.lineTo(cx,-0.01);shape.lineTo(0,-0.01);shape.closePath();
+const extGeo=new THREE.ExtrudeGeometry(shape,{depth:ROOF_D,bevelEnabled:false});
+const mesh=new THREE.Mesh(extGeo,mat);
+mesh.position.set(-ROOF_W/2,yBottom,-ROOF_D/2);
+mesh.userData={layerId:layer.id};mesh.castShadow=true;mesh.receiveShadow=true;
+g.add(mesh);
+} else if(v.seam){
+// Standing seam metal roof
+const geo=new THREE.BoxGeometry(ROOF_W,h,ROOF_D);
+const base=new THREE.Mesh(geo,mat);
+base.position.set(0,yBottom+h/2,0);base.castShadow=true;base.receiveShadow=true;
+base.userData={layerId:layer.id};g.add(base);
+// Seam ribs
+const ribMat=buildMat({color:'#606870',r:0.3,m:0.7},clip);
+for(let z=-ROOF_D/2+0.3;z<ROOF_D/2;z+=0.4){
+const ribGeo=new THREE.BoxGeometry(ROOF_W,h+0.02,0.015);
+const rib=new THREE.Mesh(ribGeo,ribMat);
+rib.position.set(0,yBottom+h/2+0.01,z);rib.userData={layerId:layer.id};g.add(rib);
+}
+} else {
+const geo=new THREE.BoxGeometry(ROOF_W,h,ROOF_D);
+const mesh=new THREE.Mesh(geo,mat);
+mesh.position.set(0,yBottom+h/2,0);
+mesh.castShadow=true;mesh.receiveShadow=true;
+mesh.userData={layerId:layer.id};
+g.add(mesh);
+}
+}
+else if(layer.type==='wall'){
+const wt=wallThk;
+// Wall body
+const geo=new THREE.BoxGeometry(wt,wallH,ROOF_D);
+const mesh=new THREE.Mesh(geo,mat);
+mesh.position.set(wallX+wt/2,wallH/2,0);
+mesh.castShadow=true;mesh.receiveShadow=true;
+mesh.userData={layerId:layer.id};
+g.add(mesh);
+}
+else if(layer.type==='wallExterior'){
+// Air barrier on exterior face of wall
+const h=wallH;
+const abThk=getDisplayThk(layer);
+const geo=new THREE.BoxGeometry(abThk,h,ROOF_D);
+const mesh=new THREE.Mesh(geo,mat);
+mesh.position.set(wallX+wallThk+abThk/2,h/2,0);
+mesh.castShadow=true;
+mesh.userData={layerId:layer.id};
+g.add(mesh);
+}
+else if(layer.type==='cladExterior'){
+const abLayer=getAllLayers().find(l=>l.id==='airbarrier');
+const abThk=abLayer&&abLayer.enabled?getDisplayThk(abLayer):0;
+const clThk=getDisplayThk(layer);
+const h=wallH;
+const geo=new THREE.BoxGeometry(clThk,h,ROOF_D);
+const mesh=new THREE.Mesh(geo,mat);
+mesh.position.set(wallX+wallThk+abThk+clThk/2,h/2,0);
+mesh.castShadow=true;mesh.receiveShadow=true;
+mesh.userData={layerId:layer.id};
+g.add(mesh);
+}
+else if(layer.type==='coping'){
+const abLayer=getAllLayers().find(l=>l.id==='airbarrier');
+const abThk=abLayer&&abLayer.enabled?getDisplayThk(abLayer):0;
+const clLayer=getAllLayers().find(l=>l.id==='cladding');
+const clThk=clLayer&&clLayer.enabled?getDisplayThk(clLayer):0;
+const overhang=0.08;
+const totalW=wallThk+abThk+clThk+overhang*2;
+// Coping cross-section profile
+const shape=new THREE.Shape();
+const dripH=0.04;
+shape.moveTo(-overhang,0);
+shape.lineTo(-overhang,-dripH);
+shape.lineTo(-overhang+0.015,-(dripH+0.01));
+shape.lineTo(-overhang+0.015,0);
+shape.lineTo(totalW-overhang,0);
+shape.lineTo(totalW-overhang,-dripH);
+shape.lineTo(totalW-overhang-0.015,-(dripH+0.01));
+shape.lineTo(totalW-overhang-0.015,0);
+shape.lineTo(totalW-overhang,0);
+shape.lineTo(totalW-overhang,0.03);
+shape.lineTo(-overhang,0.03);
+shape.closePath();
+const extGeo=new THREE.ExtrudeGeometry(shape,{depth:ROOF_D,bevelEnabled:false});
+const mesh=new THREE.Mesh(extGeo,mat);
+mesh.position.set(wallX-overhang,wallH,-ROOF_D/2);
+mesh.castShadow=true;
+mesh.userData={layerId:layer.id};
+g.add(mesh);
+}
+else if(layer.type==='flashing'){
+const flashH=0.15;
+const geo=new THREE.BoxGeometry(0.008,flashH,ROOF_D);
+const mesh=new THREE.Mesh(geo,mat);
+mesh.position.set(wallX-0.005,wallH*0.65+flashH/2,0);
+mesh.castShadow=true;
+mesh.userData={layerId:layer.id};
+g.add(mesh);
+// Horizontal lip
+const lipGeo=new THREE.BoxGeometry(0.06,0.005,ROOF_D);
+const lip=new THREE.Mesh(lipGeo,mat.clone());
+lip.position.set(wallX-0.035,wallH*0.65,0);
+lip.userData={layerId:layer.id};
+g.add(lip);
+}
+else if(layer.type==='baseflash'){
+const roofTop=computeRoofTopY();
+const turnUp=iu(8);
+// Vertical turn-up on wall face
+const geo=new THREE.BoxGeometry(0.008,turnUp,ROOF_D);
+const mesh=new THREE.Mesh(geo,mat);
+mesh.position.set(wallX-0.005,roofTop+turnUp/2,0);
+mesh.castShadow=true;mesh.userData={layerId:layer.id};
+g.add(mesh);
+// Term bar at top
+const tbMat=buildMat({color:'#A0A0A0',r:0.4,m:0.5},clip);
+const tbGeo=new THREE.BoxGeometry(0.02,0.008,ROOF_D);
+const tb=new THREE.Mesh(tbGeo,tbMat);
+tb.position.set(wallX-0.005,roofTop+turnUp,0);
+tb.userData={layerId:layer.id};
+g.add(tb);
+}
+else if(layer.type==='sealant'){
+const roofTop=computeRoofTopY();
+const sealMat=buildMat(v,clip);
+// Sealant at coping
+const s1Geo=new THREE.BoxGeometry(0.02,0.015,ROOF_D);
+const s1=new THREE.Mesh(s1Geo,sealMat);
+s1.position.set(wallX+wallThk/2,wallH+0.04,0);
+s1.userData={layerId:layer.id};g.add(s1);
+// Sealant at counter-flashing reglet
+const s2Geo=new THREE.BoxGeometry(0.012,0.02,ROOF_D);
+const s2=new THREE.Mesh(s2Geo,sealMat.clone());
+s2.position.set(wallX-0.008,wallH*0.65+0.16,0);
+s2.userData={layerId:layer.id};g.add(s2);
+// Sealant at base flashing term bar
+const turnUpY=roofTop+iu(8);
+const s3Geo=new THREE.BoxGeometry(0.015,0.01,ROOF_D);
+const s3=new THREE.Mesh(s3Geo,sealMat.clone());
+s3.position.set(wallX-0.005,turnUpY+0.008,0);
+s3.userData={layerId:layer.id};g.add(s3);
+}
+
+// Apply exploded offset
+if(exploded){
+const idx=getAllLayers().indexOf(layer);
+if(layer.type==='roof'||layer.type==='overburden'){
+g.position.y=(idx+1)*0.08;
+} else if(layer.type==='wall'||layer.type==='wallExterior'||layer.type==='cladExterior'){
+g.position.x=(idx-5)*0.06;
+} else if(layer.type==='coping'){
+g.position.y=0.6;
+}
+}
+
+// X-ray wireframe
+if(xrayMode){
+g.traverse(c=>{if(c.isMesh){
+const wf=new THREE.LineSegments(
+new THREE.EdgesGeometry(c.geometry),
+new THREE.LineBasicMaterial({color:0x2563eb,linewidth:1})
+);wf.position.copy(c.position);wf.rotation.copy(c.rotation);
+g.add(wf);}});
+}
+
+layerMeshes[layer.id]=g;
+scene.add(g);
+});
+}
+
+function computeRoofTopY(){
+const yMap=computeRoofY();
+const roofLayers=getAllLayers().filter(l=>(l.type==='roof'||l.type==='overburden')&&l.enabled).sort((a,b)=>a.order-b.order);
+if(roofLayers.length===0)return 0;
+const last=roofLayers[roofLayers.length-1];
+return(yMap[last.id]||0)+getDisplayThk(last);
+}
+
+// ============================================================
+// 8. VIEW CONTROLS
+// ============================================================
+function animateCameraTo(t,p,r,tx,ty,tz){
+orbTarget={theta:t,phi:p,radius:r||orb.radius,tx:tx!==undefined?tx:orb.tx,ty:ty!==undefined?ty:orb.ty,tz:tz!==undefined?tz:orb.tz};
+orbAnimStart=performance.now();
+}
+const CAM_PRESETS={
+N:{t:0,p:Math.PI/2,r:5,tx:0.5,ty:1,tz:0},
+S:{t:Math.PI,p:Math.PI/2,r:5,tx:0.5,ty:1,tz:0},
+E:{t:Math.PI/2,p:Math.PI/2,r:5,tx:0.5,ty:1,tz:0},
+W:{t:-Math.PI/2,p:Math.PI/2,r:5,tx:0.5,ty:1,tz:0},
+PLAN:{t:0,p:0.01,r:5,tx:0.5,ty:0,tz:0},
+RCP:{t:0,p:Math.PI-0.01,r:5,tx:0.5,ty:2,tz:0},
+'NW':{t:-Math.PI/4,p:Math.PI/3.2,r:5.5,tx:0.3,ty:0.8,tz:0},
+'NE':{t:Math.PI/4,p:Math.PI/3.2,r:5.5,tx:0.3,ty:0.8,tz:0},
+'SW':{t:-Math.PI*3/4,p:Math.PI/3.2,r:5.5,tx:0.3,ty:0.8,tz:0},
+'SE':{t:Math.PI*3/4,p:Math.PI/3.2,r:5.5,tx:0.3,ty:0.8,tz:0},
+};
+function setCamPreset(name){
+const p=CAM_PRESETS[name];if(!p)return;
+animateCameraTo(p.t,p.p,p.r,p.tx,p.ty,p.tz);
+}
+function toggleExplode(){exploded=!exploded;rebuildScene();buildPanel();}
+function toggleXray(){xrayMode=!xrayMode;rebuildScene();buildPanel();}
+function toggleSection(){sectionMode=!sectionMode;rebuildScene();buildPanel();}
+function toggleDimensions(){dimMode=!dimMode;buildPanel();/* dim overlay todo */}
+function setSeqStep(step){seqStep=step;seqMode=true;rebuildScene();
+document.getElementById('seqLabel').textContent=getSeqLabel(step);
+}
+function getSeqLabel(step){
+const l=getAllLayers().filter(x=>x.order<=step).sort((a,b)=>b.order-a.order)[0];
+return l?('Step: '+l.name):'Empty';
+}
+function toggleSeqMode(){
+seqMode=!seqMode;
+if(!seqMode)seqStep=99;
+rebuildScene();buildPanel();
+}
+
+// ============================================================
+// 9. UI BUILDER
+// ============================================================
+function buildPanel(){
+const panel=document.getElementById('panel');
+let html='';
+// Quick filters
+html+='<div class="psec"><h3>Quick Filters</h3><div class="btn-row">';
+html+='<button class="fbtn" onclick="filterAll()">All</button>';
+html+='<button class="fbtn" onclick="filterNone()">None</button>';
+html+='<button class="fbtn" onclick="filterGCP()">GCP Only</button>';
+html+='</div></div>';
+// View controls
+html+='<div class="psec"><h3>View Controls</h3><div class="btn-row">';
+html+=`<button class="cbtn${exploded?' act':''}" onclick="toggleExplode()">Exploded</button>`;
+html+=`<button class="cbtn${xrayMode?' act':''}" onclick="toggleXray()">X-Ray</button>`;
+html+=`<button class="cbtn${sectionMode?' act':''}" onclick="toggleSection()">Section</button>`;
+html+=`<button class="cbtn${dimMode?' act':''}" onclick="toggleDimensions()">Dims</button>`;
+html+='</div><div class="btn-row" style="margin-top:4px">';
+html+=`<button class="cbtn${seqMode?' act':''}" onclick="toggleSeqMode()">Sequence</button>`;
+html+=`<button class="cbtn" onclick="setCamPreset('NE')">Reset</button>`;
+html+='</div>';
+if(seqMode){
+html+='<div class="seq-row"><button class="cbtn" onclick="stepSeq(-1)" style="min-width:30px;flex:0">&larr;</button>';
+html+='<input type="range" min="1" max="12" step="0.1" value="'+seqStep+'" oninput="setSeqStep(parseFloat(this.value))">';
+html+='<button class="cbtn" onclick="stepSeq(1)" style="min-width:30px;flex:0">&rarr;</button></div>';
+html+='<div class="seq-label" id="seqLabel" style="font-size:10px;color:var(--muted);margin-top:2px">'+getSeqLabel(seqStep)+'</div>';
+}
+html+='</div>';
+// Camera presets
+html+='<div class="psec"><h3>Camera Presets</h3><div class="cam-grid">';
+['N','S','E','W','PLAN','RCP','NW','NE','SW','SE'].forEach(p=>{
+html+=`<button class="cbtn" onclick="setCamPreset('${p}')">${p}</button>`;
+});
+html+='</div></div>';
+// Layers
+html+='<div class="psec" style="flex:1"><h3>Layers</h3>';
+getAllLayers().sort((a,b)=>a.order-b.order).forEach(layer=>{
+const v=layer.variants[layer.vi];
+const thk=getLayerThickness(layer);
+const isGCP=v.gcp;
+const isOverburden=layer.order>5&&layer.order<6;
+if(layer.order===5.1&&!html.includes('OVERBURDEN'))
+html+='<div style="font-size:9px;color:var(--accent);font-weight:700;margin:8px 0 4px;text-transform:uppercase;letter-spacing:1px">Overburden Options</div>';
+if(layer.order===6&&!html.includes('WALL ASSEMBLY'))
+html+='<div style="font-size:9px;color:var(--accent);font-weight:700;margin:8px 0 4px;text-transform:uppercase;letter-spacing:1px">Wall Assembly</div>';
+if(layer.order===9&&!html.includes('ACCESSORIES'))
+html+='<div style="font-size:9px;color:var(--accent);font-weight:700;margin:8px 0 4px;text-transform:uppercase;letter-spacing:1px">Accessories</div>';
+html+='<div class="lyr-item" onclick="showProductInfo(\''+layer.id+'\')">';
+html+=`<div class="lyr-color" style="background:${v.color}"></div>`;
+html+='<div class="lyr-info">';
+html+=`<div class="lyr-name">${layer.name}${isGCP?'<span class="gcp-badge">GCP</span>':''}</div>`;
+html+=`<div class="lyr-sub">${v.name} &mdash; ${thk}"</div>`;
+html+='</div>';
+html+=`<button class="eye-btn ${layer.enabled?'on':'off'}" onclick="event.stopPropagation();toggleLayerEnabled('${layer.id}')">${layer.enabled?'\u{1F441}':'\u2014'}</button>`;
+html+='</div>';
+// Material selector
+if(layer.variants.length>1){
+html+=`<select class="mat-sel" onchange="switchVariant('${layer.id}',this.selectedIndex)">`;
+layer.variants.forEach((vr,i)=>{
+html+=`<option${i===layer.vi?' selected':''}>${vr.name}</option>`;
+});
+html+='</select>';
+}
+// Thickness selector
+if(v.thk.length>1){
+html+='<div class="thk-row">';
+v.thk.forEach((t,i)=>{
+html+=`<button class="thk-btn${i===layer.ti?' act':''}" onclick="switchThickness('${layer.id}',${i})">${t}"</button>`;
+});
+html+='</div>';
+}
+});
+// Add custom layer button
+html+='<button class="add-layer-btn" onclick="addCustomLayer()">+ Add Custom Layer</button>';
+html+='</div>';
+panel.innerHTML=html;
+}
+
+function filterAll(){getAllLayers().forEach(l=>l.enabled=true);rebuildScene();buildPanel();}
+function filterNone(){getAllLayers().forEach(l=>l.enabled=false);rebuildScene();buildPanel();}
+function filterGCP(){getAllLayers().forEach(l=>{l.enabled=l.variants[l.vi].gcp;});rebuildScene();buildPanel();}
+function toggleLayerEnabled(id){
+const l=getAllLayers().find(x=>x.id===id);if(!l)return;
+l.enabled=!l.enabled;rebuildScene();buildPanel();
+}
+function switchVariant(id,vi){
+const l=getAllLayers().find(x=>x.id===id);if(!l)return;
+l.vi=vi;l.ti=0;
+// Auto-switch air barrier based on wall type
+if(id==='wall'){
+const ab=getAllLayers().find(x=>x.id==='airbarrier');
+if(ab){ab.vi=(vi===0)?1:(vi===1)?0:0;}
+}
+rebuildScene();buildPanel();
+}
+function switchThickness(id,ti){
+const l=getAllLayers().find(x=>x.id===id);if(!l)return;
+l.ti=ti;rebuildScene();buildPanel();
+}
+function stepSeq(dir){
+seqStep=Math.max(0.5,Math.min(12.5,seqStep+dir*0.5));
+rebuildScene();buildPanel();
+}
+function addCustomLayer(){
+const name=prompt('Layer name:','Custom Layer');
+if(!name)return;
+const thk=parseFloat(prompt('Thickness (inches):','0.5'))||0.5;
+const color=prompt('Color (hex):','#AAAAAA')||'#AAAAAA';
+const insertAbove=prompt('Insert above order number (1-12):','5')||'5';
+customLayers.push({
+id:'custom_'+nextCustomId++,name:name,order:parseFloat(insertAbove)-0.01,
+type:'roof',enabled:true,vi:0,ti:0,
+variants:[{name:name,thk:[thk],color:color,tex:function(){return makeTex('cust_'+color,function(ctx,s){ctx.fillStyle=color;ctx.fillRect(0,0,s,s);noise(ctx,s,500,100,200,0.5,2);});},r:0.7,m:0,csi:'',product:'Custom layer',gcp:false}]
+});
+rebuildScene();buildPanel();
+}
+
+function showProductInfo(id){
+const l=getAllLayers().find(x=>x.id===id);if(!l)return;
+const v=l.variants[l.vi];
+const pp=document.getElementById('productPopup');
+const ov=document.getElementById('overlay');
+document.getElementById('ppName').textContent=v.gcp&&v.gcpKey&&GCP_PRODUCTS[v.gcpKey]?GCP_PRODUCTS[v.gcpKey].full:v.name;
+const gp=v.gcp&&v.gcpKey?GCP_PRODUCTS[v.gcpKey]:null;
+document.getElementById('ppMfr').textContent=gp?gp.mfr:(v.gcp?'Saint-Gobain / GCP':'Various');
+document.getElementById('ppCSI').textContent=gp?gp.csi:v.csi;
+document.getElementById('ppApp').textContent=gp?gp.app:v.product;
+document.getElementById('ppSub').textContent=gp?gp.sub:'Per manufacturer specifications';
+document.getElementById('ppNotes').textContent=gp?gp.notes:('Thickness: '+getLayerThickness(l)+'"');
+pp.style.display='block';ov.style.display='block';
+}
+function closeProductPopup(){
+document.getElementById('productPopup').style.display='none';
+document.getElementById('overlay').style.display='none';
+}
+function openAbout(){document.getElementById('aboutModal').classList.add('open');}
+function closeAbout(){document.getElementById('aboutModal').classList.remove('open');}
+document.getElementById('aboutModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAbout();});
+
+// ============================================================
+// 10. ORBIT CONTROLS
+// ============================================================
+function initControls(){
+const el=renderer.domElement;
+let isDown=false,isRight=false,px=0,py=0;
+el.addEventListener('mousedown',e=>{isDown=true;isRight=e.button===2;px=e.clientX;py=e.clientY;});
+window.addEventListener('mouseup',()=>{isDown=false;});
+el.addEventListener('contextmenu',e=>e.preventDefault());
+window.addEventListener('mousemove',e=>{
+if(!isDown)return;
+const dx=e.clientX-px,dy=e.clientY-py;px=e.clientX;py=e.clientY;
+if(isRight){
+const ps=0.003*orb.radius;
+const r=new THREE.Vector3().setFromMatrixColumn(camera.matrix,0);
+const u=new THREE.Vector3().setFromMatrixColumn(camera.matrix,1);
+orb.tx+=-dx*ps*r.x+dy*ps*u.x;
+orb.ty+=-dx*ps*r.y+dy*ps*u.y;
+orb.tz+=-dx*ps*r.z+dy*ps*u.z;
+} else {
+orb.theta-=dx*0.005;
+orb.phi=Math.max(0.05,Math.min(Math.PI-0.05,orb.phi+dy*0.005));
+}
+orbTarget=null;
+updateCameraFromOrb();
+});
+el.addEventListener('wheel',e=>{
+e.preventDefault();
+orb.radius*=e.deltaY>0?1.08:0.92;
+orb.radius=Math.max(0.5,Math.min(25,orb.radius));
+orbTarget=null;
+updateCameraFromOrb();
+},{passive:false});
+// Touch
+let td=0;
+el.addEventListener('touchstart',e=>{
+if(e.touches.length===1){isDown=true;isRight=false;px=e.touches[0].clientX;py=e.touches[0].clientY;}
+else if(e.touches.length===2){td=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}
+});
+el.addEventListener('touchmove',e=>{
+e.preventDefault();
+if(e.touches.length===1&&isDown){
+const dx=e.touches[0].clientX-px,dy=e.touches[0].clientY-py;
+px=e.touches[0].clientX;py=e.touches[0].clientY;
+orb.theta-=dx*0.005;orb.phi=Math.max(0.05,Math.min(Math.PI-0.05,orb.phi+dy*0.005));
+orbTarget=null;updateCameraFromOrb();
+} else if(e.touches.length===2){
+const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+orb.radius*=td/d;orb.radius=Math.max(0.5,Math.min(25,orb.radius));td=d;
+orbTarget=null;updateCameraFromOrb();
+}
+},{passive:false});
+el.addEventListener('touchend',()=>{isDown=false;});
+}
+
+// ============================================================
+// 11. ANIMATION LOOP
+// ============================================================
+function animate(){
+requestAnimationFrame(animate);
+// Camera animation
+if(orbTarget){
+const t=Math.min((performance.now()-orbAnimStart)/500,1);
+const ease=t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+orb.theta+=(orbTarget.theta-orb.theta)*ease*0.15;
+orb.phi+=(orbTarget.phi-orb.phi)*ease*0.15;
+orb.radius+=(orbTarget.radius-orb.radius)*ease*0.15;
+orb.tx+=(orbTarget.tx-orb.tx)*ease*0.15;
+orb.ty+=(orbTarget.ty-orb.ty)*ease*0.15;
+orb.tz+=(orbTarget.tz-orb.tz)*ease*0.15;
+if(Math.abs(orb.theta-orbTarget.theta)<0.001&&Math.abs(orb.phi-orbTarget.phi)<0.001){
+orb.theta=orbTarget.theta;orb.phi=orbTarget.phi;orb.radius=orbTarget.radius;
+orb.tx=orbTarget.tx;orb.ty=orbTarget.ty;orb.tz=orbTarget.tz;
+orbTarget=null;
+}
+updateCameraFromOrb();
+}
+renderer.render(scene,camera);
+}
+function onResize(){
+const vp=document.getElementById('vp');
+const w=vp.clientWidth,h=vp.clientHeight;
+camera.aspect=w/h;camera.updateProjectionMatrix();
+renderer.setSize(w,h);
+}
+window.addEventListener('resize',onResize);
+
+// ============================================================
+// 12. INIT
+// ============================================================
+initScene();
+initControls();
+rebuildScene();
+buildPanel();
+animate();
 </script>
 </body>
 </html>
