@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D BIM Detail Viewer — Roofing &amp; Waterproofing</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --primary: #1a365d;
+  --primary-light: #2d4a7c;
+  --accent: #2563eb;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --sidebar-w: 320px;
+  --header-h: 56px;
+  --footer-h: 36px;
+}
+
+html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+
+/* HEADER */
+.header {
+  height: var(--header-h);
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.header h1 { font-size: 16px; font-weight: 600; letter-spacing: 1.5px; }
+.header .subtitle { font-size: 11px; color: #94a3b8; letter-spacing: 0.5px; }
+
+/* MAIN LAYOUT */
+.main { display: flex; height: calc(100vh - var(--header-h) - var(--footer-h)); }
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.sidebar-section { padding: 16px; border-bottom: 1px solid var(--border); }
+.sidebar-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px; }
+
+/* QUICK FILTERS */
+.filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+.filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* LAYER ITEMS */
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background 0.1s;
+  border-radius: 4px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+.layer-item:hover { background: #f8fafc; }
+.layer-item:last-child { border-bottom: none; }
+.layer-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+.layer-info { flex: 1; min-width: 0; }
+.layer-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.layer-detail { font-size: 11px; color: var(--text-muted); }
+.layer-gcp { font-size: 9px; background: #dbeafe; color: #1d4ed8; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
+
+.layer-toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.layer-toggle input { opacity: 0; width: 0; height: 0; }
+.layer-toggle .slider {
+  position: absolute;
+  inset: 0;
+  background: #cbd5e1;
+  border-radius: 10px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.layer-toggle .slider::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.layer-toggle input:checked + .slider { background: var(--accent); }
+.layer-toggle input:checked + .slider::after { transform: translateX(16px); }
+
+/* VIEW CONTROLS */
+.control-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.control-btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.control-btn:hover { border-color: var(--accent); color: var(--accent); }
+.control-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* VIEWER */
+.viewer {
+  flex: 1;
+  position: relative;
+  background: linear-gradient(180deg, #f0f4f8 0%, #e2e8f0 100%);
+}
+.viewer canvas { display: block; }
+.viewer-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.85);
+  padding: 4px 14px;
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+/* TOOLTIP */
+.tooltip {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 20;
+  display: none;
+  max-width: 240px;
+}
+.tooltip .tt-name { font-weight: 600; margin-bottom: 4px; }
+.tooltip .tt-detail { color: var(--text-muted); line-height: 1.4; }
+
+/* FOOTER */
+.footer {
+  height: var(--footer-h);
+  background: var(--primary);
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+.footer a { color: #94a3b8; text-decoration: none; }
+.footer a:hover { color: #fff; }
+
+/* ABOUT MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 28px 32px;
+  max-width: 520px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.modal h2 { font-size: 18px; margin-bottom: 12px; }
+.modal p { font-size: 13px; line-height: 1.6; color: var(--text-muted); margin-bottom: 10px; }
+.modal .close-btn {
+  margin-top: 16px;
+  padding: 8px 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .sidebar { width: 260px; min-width: 260px; }
+  :root { --sidebar-w: 260px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>3D BIM DETAIL VIEWER &mdash; ROOFING &amp; WATERPROOFING</h1>
+    <div class="subtitle">Parapet Wall Assembly &bull; 10 Layers</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button class="filter-btn" onclick="openAbout()" style="color:#94a3b8;border-color:#475569;">About</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <h3>Quick Filters</h3>
+      <div class="filter-row">
+        <button class="filter-btn active" id="filterAll" onclick="filterAll()">All</button>
+        <button class="filter-btn" id="filterNone" onclick="filterNone()">None</button>
+        <button class="filter-btn" id="filterGCP" onclick="filterGCP()">GCP Only</button>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <h3>View Controls</h3>
+      <div class="control-row">
+        <button class="control-btn" id="btnExplode" onclick="toggleExplode()">Exploded</button>
+        <button class="control-btn" id="btnSection" onclick="toggleSection()">Section Cut</button>
+      </div>
+      <div class="control-row" style="margin-top:6px;">
+        <button class="control-btn" onclick="resetCamera()">Reset View</button>
+        <button class="control-btn" onclick="topView()">Top View</button>
+      </div>
+    </div>
+    <div class="sidebar-section" style="flex:1;">
+      <h3>Layers</h3>
+      <div id="layerList"></div>
+    </div>
+  </div>
+
+  <div class="viewer" id="viewerContainer">
+    <div class="tooltip" id="tooltip">
+      <div class="tt-name" id="ttName"></div>
+      <div class="tt-detail" id="ttDetail"></div>
+    </div>
+    <div class="viewer-hint">Click + drag to orbit &bull; Scroll to zoom &bull; Right-click to pan</div>
+  </div>
+</div>
+
+<div class="footer">
+  3D BIM Detail Viewer&trade; &mdash; &copy; 2026 Lefebvre Design Solutions LLC / ValidKernel &mdash;
+  <a href="#" onclick="openAbout();return false;">License Info</a>
+</div>
+
+<!-- About Modal -->
+<div class="modal-overlay" id="aboutModal">
+  <div class="modal">
+    <h2>3D BIM Detail Viewer&trade;</h2>
+    <p><strong>Version:</strong> SaaS Preview &mdash; Parapet Detail Demo</p>
+    <p>3D BIM Detail Viewer&trade; is a trademark of Lefebvre Design Solutions LLC / ValidKernel.</p>
+    <p><strong>Dual License:</strong><br>
+    <em>Open License (Free):</em> Released for public, educational, open-source, and government purposes. Attribution required.<br>
+    <em>Commercial License:</em> Revenue-generating use requires separate commercial license. Contact Lefebvre Design Solutions LLC.</p>
+    <p style="font-size:11px;">All deployments operate under ValidKernel deterministic trust infrastructure with RuleBind license enforcement and StrictRun execution logging.</p>
+    <button class="close-btn" onclick="closeAbout()">Close</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ===== LAYER DATA =====
+const LAYERS = [
+  { id: 1,  name: "Structural Deck",    color: "#888888", thickness: 0.30, y: 0.00,  product: "Concrete or steel deck",      gcp: false, csi: "03 30 00" },
+  { id: 2,  name: "Vapor Retarder",      color: "#4488CC", thickness: 0.02, y: 0.30,  product: "Below insulation",            gcp: false, csi: "07 26 00" },
+  { id: 3,  name: "Insulation (Polyiso)", color: "#FFCC00", thickness: 0.15, y: 0.32,  product: "Tapered at roof edge, 3\"",   gcp: false, csi: "07 22 00" },
+  { id: 4,  name: "Cover Board",         color: "#CCCCCC", thickness: 0.03, y: 0.47,  product: "Gypsum or HD polyiso, 0.5\"", gcp: false, csi: "07 22 16" },
+  { id: 5,  name: "Roofing Membrane",    color: "#333333", thickness: 0.04, y: 0.50,  product: "GCP \u2014 2-ply base + cap sheet",  gcp: true,  csi: "07 51 13" },
+  { id: 6,  name: "Parapet Wall",        color: "#D4B896", thickness: 0.20, y: 0.00,  product: "CMU or steel stud, 36\u201348\"",   gcp: false, csi: "04 22 00", isWall: true },
+  { id: 7,  name: "Air Barrier",         color: "#228B22", thickness: 0.01, y: 0.00,  product: "GCP Perm-A-Barrier\u00AE",           gcp: true,  csi: "07 27 00", isBarrier: true },
+  { id: 8,  name: "Metal Coping",        color: "#C0C0C0", thickness: 0.04, y: 1.80,  product: "Drip edges both sides",       gcp: false, csi: "07 71 00", isCoping: true },
+  { id: 9,  name: "Counter-Flashing",    color: "#808080", thickness: 0.02, y: 1.20,  product: "Reglet, overlaps 4\"",         gcp: false, csi: "07 62 00", isFlashing: true },
+  { id: 10, name: "Sealant",             color: "#CC3333", thickness: 0.02, y: 1.78,  product: "At reglet + coping joints",   gcp: false, csi: "07 92 00", isSealant: true }
+];
+
+let layerVisibility = {};
+let layerGroups = {};
+let exploded = false;
+let sectionCut = false;
+let scene, camera, renderer, controls;
+let raycaster, mouse;
+let clippingPlane;
+
+LAYERS.forEach(l => layerVisibility[l.id] = true);
+
+// ===== INIT THREE.JS =====
+function init() {
+  const container = document.getElementById('viewerContainer');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xf0f4f8);
+
+  camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
+  camera.position.set(3.5, 2.5, 3.5);
+  camera.lookAt(0, 0.7, 0);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.localClippingEnabled = true;
+  container.insertBefore(renderer.domElement, container.firstChild);
+
+  // Lighting
+  const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambient);
+
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(5, 8, 5);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.set(1024, 1024);
+  dirLight.shadow.camera.near = 0.1;
+  dirLight.shadow.camera.far = 30;
+  dirLight.shadow.camera.left = -5;
+  dirLight.shadow.camera.right = 5;
+  dirLight.shadow.camera.top = 5;
+  dirLight.shadow.camera.bottom = -5;
+  scene.add(dirLight);
+
+  const fillLight = new THREE.DirectionalLight(0x8ecae6, 0.3);
+  fillLight.position.set(-3, 4, -2);
+  scene.add(fillLight);
+
+  // Ground grid
+  const grid = new THREE.GridHelper(8, 16, 0xd0d0d0, 0xe8e8e8);
+  grid.position.y = -0.01;
+  scene.add(grid);
+
+  // Clipping plane
+  clippingPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0.8);
+
+  // Raycaster for hover
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  buildLayers();
+  buildUI();
+  initOrbitControls();
+  animate();
+
+  window.addEventListener('resize', onResize);
+  container.addEventListener('mousemove', onMouseMove);
+  container.addEventListener('mouseleave', hideTooltip);
+}
+
+// ===== BUILD 3D LAYERS =====
+function buildLayers() {
+  LAYERS.forEach(layer => {
+    const group = new THREE.Group();
+    group.userData = { layerId: layer.id, layerName: layer.name, layerData: layer };
+
+    if (layer.isWall) {
+      buildParapetWall(group, layer);
+    } else if (layer.isBarrier) {
+      buildAirBarrier(group, layer);
+    } else if (layer.isCoping) {
+      buildCoping(group, layer);
+    } else if (layer.isFlashing) {
+      buildFlashing(group, layer);
+    } else if (layer.isSealant) {
+      buildSealant(group, layer);
+    } else {
+      buildRoofLayer(group, layer);
+    }
+
+    scene.add(group);
+    layerGroups[layer.id] = group;
+  });
+}
+
+function makeMat(color, opts = {}) {
+  return new THREE.MeshStandardMaterial({
+    color: new THREE.Color(color),
+    roughness: opts.roughness || 0.7,
+    metalness: opts.metalness || 0.0,
+    transparent: opts.transparent || false,
+    opacity: opts.opacity || 1.0,
+    side: THREE.DoubleSide,
+    clippingPlanes: sectionCut ? [clippingPlane] : []
+  });
+}
+
+function buildRoofLayer(group, layer) {
+  // Flat roof layer
+  const geo = new THREE.BoxGeometry(2.4, layer.thickness, 2.0);
+  const mesh = new THREE.Mesh(geo, makeMat(layer.color));
+  mesh.position.set(0, layer.y + layer.thickness / 2, 0);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.userData = { layerId: layer.id };
+  group.add(mesh);
+}
+
+function buildParapetWall(group, layer) {
+  // Vertical wall at the edge
+  const wallH = 1.8;
+  const geo = new THREE.BoxGeometry(layer.thickness, wallH, 2.0);
+  const mesh = new THREE.Mesh(geo, makeMat(layer.color));
+  mesh.position.set(1.2 + layer.thickness / 2, wallH / 2, 0);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.userData = { layerId: layer.id };
+  group.add(mesh);
+
+  // CMU lines
+  const lineColor = new THREE.Color(layer.color).multiplyScalar(0.8);
+  for (let row = 0; row < 9; row++) {
+    const lineGeo = new THREE.BoxGeometry(layer.thickness + 0.002, 0.005, 2.002);
+    const lineMesh = new THREE.Mesh(lineGeo, makeMat('#' + lineColor.getHexString()));
+    lineMesh.position.set(1.2 + layer.thickness / 2, 0.1 + row * 0.2, 0);
+    lineMesh.userData = { layerId: layer.id };
+    group.add(lineMesh);
+  }
+}
+
+function buildAirBarrier(group, layer) {
+  // Thin membrane on wall exterior
+  const wallH = 1.8;
+  const geo = new THREE.BoxGeometry(0.015, wallH, 2.0);
+  const mesh = new THREE.Mesh(geo, makeMat(layer.color, { roughness: 0.5 }));
+  mesh.position.set(1.2, wallH / 2, 0);
+  mesh.castShadow = true;
+  mesh.userData = { layerId: layer.id };
+  group.add(mesh);
+}
+
+function buildCoping(group, layer) {
+  // Metal cap on parapet top
+  const shape = new THREE.Shape();
+  shape.moveTo(-0.18, 0);
+  shape.lineTo(0.38, 0);
+  shape.lineTo(0.40, -0.06);
+  shape.lineTo(0.38, -0.10);
+  shape.lineTo(-0.16, -0.10);
+  shape.lineTo(-0.20, -0.06);
+  shape.closePath();
+
+  const extSettings = { depth: 2.0, bevelEnabled: false };
+  const geo = new THREE.ExtrudeGeometry(shape, extSettings);
+  const mesh = new THREE.Mesh(geo, makeMat(layer.color, { metalness: 0.5, roughness: 0.3 }));
+  mesh.position.set(1.1, layer.y, -1.0);
+  mesh.castShadow = true;
+  mesh.userData = { layerId: layer.id };
+  group.add(mesh);
+}
+
+function buildFlashing(group, layer) {
+  // Counter-flashing: vertical strip on wall
+  const geo = new THREE.BoxGeometry(0.01, 0.30, 2.0);
+  const mesh = new THREE.Mesh(geo, makeMat(layer.color, { metalness: 0.4, roughness: 0.4 }));
+  mesh.position.set(1.19, layer.y + 0.15, 0);
+  mesh.castShadow = true;
+  mesh.userData = { layerId: layer.id };
+  group.add(mesh);
+
+  // Horizontal lip
+  const lipGeo = new THREE.BoxGeometry(0.08, 0.008, 2.0);
+  const lipMesh = new THREE.Mesh(lipGeo, makeMat(layer.color, { metalness: 0.4 }));
+  lipMesh.position.set(1.15, layer.y, 0);
+  lipMesh.userData = { layerId: layer.id };
+  group.add(lipMesh);
+}
+
+function buildSealant(group, layer) {
+  // Sealant beads at coping joints
+  const mat = makeMat(layer.color, { roughness: 0.9 });
+
+  // Top sealant at coping
+  const geo1 = new THREE.BoxGeometry(0.04, 0.02, 2.0);
+  const m1 = new THREE.Mesh(geo1, mat);
+  m1.position.set(1.30, 1.80, 0);
+  m1.userData = { layerId: layer.id };
+  group.add(m1);
+
+  // Reglet sealant
+  const geo2 = new THREE.BoxGeometry(0.02, 0.04, 2.0);
+  const m2 = new THREE.Mesh(geo2, mat);
+  m2.position.set(1.19, 1.22, 0);
+  m2.userData = { layerId: layer.id };
+  group.add(m2);
+}
+
+// ===== ORBIT CONTROLS (inline, no import) =====
+function initOrbitControls() {
+  const el = renderer.domElement;
+  let isDown = false, isRight = false;
+  let prevX = 0, prevY = 0;
+  let spherical = { theta: Math.atan2(camera.position.x, camera.position.z), phi: Math.acos(camera.position.y / camera.position.distanceTo(new THREE.Vector3(0,0.7,0))), radius: camera.position.distanceTo(new THREE.Vector3(0,0.7,0)) };
+  let target = new THREE.Vector3(0, 0.7, 0);
+
+  function updateCamera() {
+    const sp = Math.sin(spherical.phi);
+    camera.position.set(
+      target.x + spherical.radius * sp * Math.sin(spherical.theta),
+      target.y + spherical.radius * Math.cos(spherical.phi),
+      target.z + spherical.radius * sp * Math.cos(spherical.theta)
+    );
+    camera.lookAt(target);
+  }
+
+  el.addEventListener('mousedown', e => {
+    isDown = true;
+    isRight = e.button === 2;
+    prevX = e.clientX;
+    prevY = e.clientY;
+  });
+
+  window.addEventListener('mouseup', () => { isDown = false; });
+
+  el.addEventListener('contextmenu', e => e.preventDefault());
+
+  window.addEventListener('mousemove', e => {
+    if (!isDown) return;
+    const dx = e.clientX - prevX;
+    const dy = e.clientY - prevY;
+    prevX = e.clientX;
+    prevY = e.clientY;
+
+    if (isRight) {
+      // Pan
+      const panSpeed = 0.003 * spherical.radius;
+      const right = new THREE.Vector3();
+      right.setFromMatrixColumn(camera.matrix, 0);
+      const up = new THREE.Vector3();
+      up.setFromMatrixColumn(camera.matrix, 1);
+      target.add(right.multiplyScalar(-dx * panSpeed));
+      target.add(up.multiplyScalar(dy * panSpeed));
+    } else {
+      // Orbit
+      spherical.theta -= dx * 0.005;
+      spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi + dy * 0.005));
+    }
+    updateCamera();
+  });
+
+  el.addEventListener('wheel', e => {
+    e.preventDefault();
+    spherical.radius *= e.deltaY > 0 ? 1.08 : 0.92;
+    spherical.radius = Math.max(1, Math.min(20, spherical.radius));
+    updateCamera();
+  }, { passive: false });
+
+  // Touch support
+  let touchDist = 0;
+  el.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      isDown = true; isRight = false;
+      prevX = e.touches[0].clientX;
+      prevY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      touchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    }
+  });
+  el.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (e.touches.length === 1 && isDown) {
+      const dx = e.touches[0].clientX - prevX;
+      const dy = e.touches[0].clientY - prevY;
+      prevX = e.touches[0].clientX;
+      prevY = e.touches[0].clientY;
+      spherical.theta -= dx * 0.005;
+      spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi + dy * 0.005));
+      updateCamera();
+    } else if (e.touches.length === 2) {
+      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      spherical.radius *= touchDist / dist;
+      spherical.radius = Math.max(1, Math.min(20, spherical.radius));
+      touchDist = dist;
+      updateCamera();
+    }
+  }, { passive: false });
+  el.addEventListener('touchend', () => { isDown = false; });
+
+  // Store controls for external access
+  window._orbitControls = { spherical, target, updateCamera };
+}
+
+// ===== UI BUILDERS =====
+function buildUI() {
+  const list = document.getElementById('layerList');
+  list.innerHTML = '';
+
+  LAYERS.forEach(layer => {
+    const item = document.createElement('div');
+    item.className = 'layer-item';
+    item.innerHTML = `
+      <div class="layer-color" style="background:${layer.color}"></div>
+      <div class="layer-info">
+        <div class="layer-name">${layer.name} ${layer.gcp ? '<span class="layer-gcp">GCP</span>' : ''}</div>
+        <div class="layer-detail">${layer.product}</div>
+      </div>
+      <label class="layer-toggle">
+        <input type="checkbox" ${layerVisibility[layer.id] ? 'checked' : ''} onchange="toggleLayer(${layer.id}, this.checked)">
+        <span class="slider"></span>
+      </label>
+    `;
+    item.addEventListener('click', e => {
+      if (e.target.closest('.layer-toggle')) return;
+      highlightLayer(layer.id);
+    });
+    list.appendChild(item);
+  });
+}
+
+// ===== LAYER CONTROLS =====
+function toggleLayer(id, visible) {
+  layerVisibility[id] = visible;
+  if (layerGroups[id]) layerGroups[id].visible = visible;
+  updateFilterButtons();
+}
+
+function filterAll() {
+  LAYERS.forEach(l => { layerVisibility[l.id] = true; });
+  updateAll();
+}
+
+function filterNone() {
+  LAYERS.forEach(l => { layerVisibility[l.id] = false; });
+  updateAll();
+}
+
+function filterGCP() {
+  LAYERS.forEach(l => { layerVisibility[l.id] = l.gcp; });
+  updateAll();
+}
+
+function updateAll() {
+  LAYERS.forEach(l => {
+    if (layerGroups[l.id]) layerGroups[l.id].visible = layerVisibility[l.id];
+  });
+  // Update checkboxes
+  document.querySelectorAll('.layer-toggle input').forEach((cb, i) => {
+    cb.checked = layerVisibility[LAYERS[i].id];
+  });
+  updateFilterButtons();
+}
+
+function updateFilterButtons() {
+  const allOn = LAYERS.every(l => layerVisibility[l.id]);
+  const noneOn = LAYERS.every(l => !layerVisibility[l.id]);
+  const gcpOnly = LAYERS.every(l => layerVisibility[l.id] === l.gcp);
+
+  document.getElementById('filterAll').classList.toggle('active', allOn);
+  document.getElementById('filterNone').classList.toggle('active', noneOn);
+  document.getElementById('filterGCP').classList.toggle('active', gcpOnly && !allOn && !noneOn);
+}
+
+// ===== VIEW CONTROLS =====
+function toggleExplode() {
+  exploded = !exploded;
+  document.getElementById('btnExplode').classList.toggle('active', exploded);
+
+  LAYERS.forEach(layer => {
+    const group = layerGroups[layer.id];
+    if (!group) return;
+
+    const offset = exploded ? layer.id * 0.15 : 0;
+    if (layer.isWall || layer.isBarrier) {
+      // Move wall items horizontally
+      group.position.x = exploded ? layer.id * 0.08 : 0;
+      group.position.y = 0;
+    } else if (layer.isCoping || layer.isSealant) {
+      group.position.y = exploded ? offset + 0.5 : 0;
+    } else if (layer.isFlashing) {
+      group.position.y = exploded ? offset + 0.3 : 0;
+      group.position.x = exploded ? 0.15 : 0;
+    } else {
+      group.position.y = exploded ? offset : 0;
+    }
+  });
+}
+
+function toggleSection() {
+  sectionCut = !sectionCut;
+  document.getElementById('btnSection').classList.toggle('active', sectionCut);
+
+  // Rebuild materials with/without clipping
+  LAYERS.forEach(layer => {
+    const group = layerGroups[layer.id];
+    if (!group) return;
+    group.traverse(child => {
+      if (child.isMesh) {
+        child.material.clippingPlanes = sectionCut ? [clippingPlane] : [];
+        child.material.needsUpdate = true;
+      }
+    });
+  });
+}
+
+function resetCamera() {
+  const c = window._orbitControls;
+  c.spherical.theta = Math.PI / 4;
+  c.spherical.phi = Math.PI / 3.5;
+  c.spherical.radius = 5;
+  c.target.set(0, 0.7, 0);
+  c.updateCamera();
+}
+
+function topView() {
+  const c = window._orbitControls;
+  c.spherical.theta = 0;
+  c.spherical.phi = 0.1;
+  c.spherical.radius = 5;
+  c.target.set(0.5, 0, 0);
+  c.updateCamera();
+}
+
+// ===== HOVER / TOOLTIP =====
+function onMouseMove(event) {
+  const container = document.getElementById('viewerContainer');
+  const rect = container.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const meshes = [];
+  scene.traverse(c => { if (c.isMesh && c.parent.visible) meshes.push(c); });
+  const hits = raycaster.intersectObjects(meshes);
+
+  const tooltip = document.getElementById('tooltip');
+  if (hits.length > 0) {
+    const lid = hits[0].object.userData.layerId;
+    if (lid) {
+      const layer = LAYERS.find(l => l.id === lid);
+      if (layer) {
+        document.getElementById('ttName').textContent = layer.name;
+        document.getElementById('ttDetail').innerHTML =
+          `${layer.product}<br>CSI: ${layer.csi}${layer.gcp ? '<br><strong style="color:#1d4ed8">GCP / Saint-Gobain Product</strong>' : ''}`;
+        tooltip.style.display = 'block';
+        tooltip.style.left = (event.clientX - rect.left + 16) + 'px';
+        tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+        return;
+      }
+    }
+  }
+  tooltip.style.display = 'none';
+}
+
+function hideTooltip() {
+  document.getElementById('tooltip').style.display = 'none';
+}
+
+function highlightLayer(id) {
+  // Brief highlight flash
+  const group = layerGroups[id];
+  if (!group) return;
+  const origColors = [];
+  group.traverse(c => {
+    if (c.isMesh) {
+      origColors.push({ mesh: c, color: c.material.color.getHex() });
+      c.material.color.setHex(0x2563eb);
+      c.material.emissive = new THREE.Color(0x2563eb);
+      c.material.emissiveIntensity = 0.3;
+    }
+  });
+  setTimeout(() => {
+    origColors.forEach(({ mesh, color }) => {
+      mesh.material.color.setHex(color);
+      mesh.material.emissive = new THREE.Color(0x000000);
+      mesh.material.emissiveIntensity = 0;
+    });
+  }, 600);
+}
+
+// ===== ABOUT MODAL =====
+function openAbout() { document.getElementById('aboutModal').classList.add('open'); }
+function closeAbout() { document.getElementById('aboutModal').classList.remove('open'); }
+document.getElementById('aboutModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeAbout();
+});
+
+// ===== ANIMATION LOOP =====
+function animate() {
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+
+function onResize() {
+  const container = document.getElementById('viewerContainer');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+// ===== START =====
+init();
+</script>
+</body>
+</html>

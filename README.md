@@ -1,228 +1,159 @@
-# POLR Holographic Viewer
+# 3D BIM Detail Viewer — Multi-Tenant SaaS Platform
 
-**Holographic Construction Detail Viewer with Semantic Compression**
+**Browser-based 3D construction detail viewing for architecture and building enclosure professionals.**
 
-Transform construction shop drawings into interactive 3D holograms. View wall assemblies, roofing details, expansion joints, and penetrations as fully rendered 3D models with realistic PBR materials.
-
----
-
-## Overview
-
-The POLR Holographic Viewer converts semantic construction detail descriptions into fully rendered 3D scenes. Instead of storing massive volumetric data, we use a semantic compression approach that achieves remarkable compression ratios.
-
-### Semantic Compression
-
-| Approach | Data Size | Description |
-|----------|-----------|-------------|
-| Traditional 3D | ~50 MB | Volumetric mesh data |
-| Semantic | ~500 bytes | Parameters + reconstruction |
-| **Compression Ratio** | **1,900:1 to 5,000:1** | Lossless reconstruction |
-
-A simple JSON description like "6-layer roofing assembly with EPDM membrane" is expanded at runtime into thousands of vertices with accurate materials, textures, and geometry.
+View parapet assemblies, roofing details, air barriers, and waterproofing systems as interactive 3D models with layer-by-layer control, product identification, and GCP/Saint-Gobain integration.
 
 ---
 
-## Features
+## Quick Start
 
-### 3D Construction Details
-- **5 Detail Categories:** Expansion joints, air barriers, roofing, foundation, penetrations
-- **Realistic Geometry:** Accurate layer thicknesses, proper material stacking
-- **Dynamic Generation:** Details built from semantic parameters at runtime
+### Standalone Demo (no dependencies)
 
-### Universal Material Library
-- **20+ Base Material Types:** Membranes, insulation, substrates, sealants, flashings
-- **Procedural PBR Textures:** Granular, rubberized, dimpled, concrete, metal finishes
-- **Accurate Visual Properties:** Roughness, metalness, opacity based on real materials
+Open `demo/index.html` in any browser — double-click the file. No server, no install.
 
-### Camera Views
-- **Plan View:** Top-down orthographic
-- **Elevations:** North, South, East, West
-- **Isometric:** NE, NW, SE, SW corners
-- **Smooth Transitions:** Animated camera movements with easing
+- 10-layer parapet wall assembly
+- Layer toggles, quick filters (All / None / GCP Only)
+- Exploded view and section cut
+- Three.js r128 from CDN
 
-### Holographic Effects
-- **Emissive Glow:** Subtle material luminescence
-- **Wireframe Overlay:** Cyan wireframe for technical clarity
-- **Scan Lines:** Animated horizontal scan effect
-- **Auto-Rotate:** Continuous rotation for presentation
+### SaaS Platform (full stack)
 
-### Data Visualization
-- **Layer Stack:** Visual breakdown of all assembly layers
-- **Compression Stats:** Real-time semantic vs mesh size comparison
-- **JSON Viewer:** Raw semantic data with copy functionality
-- **Product Callouts:** GCP product specifications per layer
+```bash
+# Prerequisites: Node.js 18+, PostgreSQL 14+
+
+# Install dependencies
+npm install
+
+# Set up database
+createdb bim_viewer
+npm run --workspace=backend migrate
+npm run --workspace=backend seed
+# Seed login: admin@demo.com / demo123
+
+# Run both frontend and backend
+npm run dev
+```
+
+- **Frontend:** http://localhost:3000 (React + Vite)
+- **Backend API:** http://localhost:3001 (Express)
+- **Health check:** http://localhost:3001/api/health
 
 ---
 
-## Screenshots
+## Architecture
 
-![POLR Holographic Viewer](./polr-holographic-viewer/screenshots/holographic-viewer-main.png)
+```
+holograph_details/
+├── demo/                        # Standalone HTML demo (zero deps)
+│   └── index.html
+├── frontend/                    # React + Vite SaaS frontend
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── viewer/          # Three.js 3D viewer
+│   │   │   ├── layers/          # Layer panel, toggles, filters
+│   │   │   ├── details/         # Dashboard, detail viewer
+│   │   │   ├── auth/            # Login, register
+│   │   │   └── layout/          # Header, footer
+│   │   ├── contexts/            # Auth + Tenant React contexts
+│   │   ├── services/            # API client with JWT
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── package.json
+│   └── vite.config.ts
+├── backend/                     # Express API (Node.js)
+│   ├── src/
+│   │   ├── middleware/           # Tenant resolution, JWT auth, errors
+│   │   ├── routes/              # auth, details, tenants, products
+│   │   ├── db/                  # PostgreSQL, migrations, seed
+│   │   └── index.ts
+│   └── package.json
+├── shared/                      # Shared TypeScript types
+│   └── types/
+│       ├── tenant.ts
+│       ├── detail.ts
+│       ├── layer.ts
+│       └── user.ts
+├── polr-holographic-viewer/     # Original R&D prototype
+└── package.json                 # Workspace root
+```
 
-*RF-002: Roof Edge Termination with Metal Coping - showing 3D view, layer stack, camera controls, and GCP product callouts*
+---
+
+## Multi-Tenant Design
+
+- **Schema-per-tenant** PostgreSQL isolation
+- Tenant resolved via `X-Tenant-ID` header or subdomain
+- JWT auth with `{ userId, tenantId, role }` payload
+- Roles: `admin`, `editor`, `viewer`
+- Per-tenant branding (logo, colors, name)
+
+### API Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/health` | No | Health check |
+| GET | `/api/tenants` | No | List tenants |
+| POST | `/api/tenants` | No | Create tenant |
+| POST | `/api/auth/login` | Tenant | Login, get JWT |
+| POST | `/api/auth/register` | Tenant | Register user |
+| GET | `/api/details` | JWT | List details |
+| GET | `/api/details/:id` | JWT | Detail + layers |
+| POST | `/api/details` | JWT (editor+) | Create detail |
+| PUT | `/api/details/:id` | JWT (editor+) | Update detail |
+| DELETE | `/api/details/:id` | JWT (admin) | Delete detail |
+| GET | `/api/details/:id/layers` | JWT | Get layers |
+| PUT | `/api/details/:id/layers` | JWT (editor+) | Update layers |
+| GET | `/api/products` | JWT | Product catalog |
+| GET | `/api/tenant/settings` | Tenant | Tenant branding |
+
+---
+
+## Parapet Detail — Layer Specification
+
+| # | Layer | Color | Thickness | Product |
+|---|-------|-------|-----------|---------|
+| 1 | Structural Deck | #888888 | 6" | Concrete or steel deck |
+| 2 | Vapor Retarder | #4488CC | thin | Below insulation |
+| 3 | Insulation (Polyiso) | #FFCC00 | 3" | Tapered at roof edge |
+| 4 | Cover Board | #CCCCCC | 0.5" | Gypsum or HD polyiso |
+| 5 | Roofing Membrane | #333333 | 2-ply | **GCP** — base + cap sheet |
+| 6 | Parapet Wall | #D4B896 | 36-48" | CMU or steel stud |
+| 7 | Air Barrier | #228B22 | — | **GCP Perm-A-Barrier** |
+| 8 | Metal Coping | #C0C0C0 | — | Drip edges both sides |
+| 9 | Counter-Flashing | #808080 | — | Reglet, overlaps 4" |
+| 10 | Sealant | #CC3333 | — | At reglet + coping joints |
 
 ---
 
 ## Tech Stack
 
-| Technology | Purpose |
-|------------|---------|
-| **React 18** | UI components and state management |
-| **Three.js** | WebGL 3D rendering engine |
-| **TypeScript** | Type-safe development |
-| **Vite** | Fast build tooling and HMR |
-| **WebXR** | AR/VR device support |
-| **OrbitControls** | Camera interaction |
-
----
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/jenkintownelectricity/holograph_details.git
-cd holograph_details/polr-holographic-viewer
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-Open **http://localhost:3000** (or 3001 if 3000 is in use)
-
-### Build for Production
-
-```bash
-npm run build
-npm run preview
-```
-
----
-
-## Supported Manufacturers
-
-The material library includes product mappings for:
-
-| Manufacturer | Products |
-|--------------|----------|
-| **GCP Applied Technologies** | BITUTHENE, PERM-A-BARRIER, PREPRUFE |
-| **Carlisle (CCW)** | MiraDRI, MiraFLEX, CCW-705 |
-| **Sika** | Sikalastic, SikaProof |
-| **Tremco** | TREMproof, Vulkem |
-| **W.R. Meadows** | MEL-ROL, PRECON |
-| **Henry Company** | Blueskin, Air-Bloc |
-| **Firestone** | RubberGard EPDM, UltraPly TPO |
-| **Dow** | THERMAX, STYROFOAM |
-
----
-
-## Display Modes
-
-| Mode | Status | Hardware Required |
-|------|--------|-------------------|
-| Standard 3D | Working | Any modern browser |
-| AR (WebXR) | Ready* | Quest 3, Vision Pro, ARCore devices |
-| VR (WebXR) | Ready* | Quest, Vive, Index, WMR headsets |
-| Looking Glass | Planned | Looking Glass Portrait/Go |
-
-*Requires WebXR-compatible browser and hardware
-
----
-
-## Project Structure
-
-```
-polr-holographic-viewer/
-├── App.tsx                 # Main application component
-├── main.tsx                # React entry point
-├── index.html              # HTML template
-├── hologram/
-│   ├── holographic-renderer.ts  # Three.js scene management
-│   └── semantic-to-mesh.ts      # Semantic → 3D conversion
-├── materials/
-│   ├── base-materials.ts   # 20+ material definitions
-│   ├── manufacturers.ts    # Product → material mappings
-│   ├── material-factory.ts # PBR material generator
-│   └── index.ts
-├── schemas/
-│   └── semantic-detail.ts  # TypeScript interfaces
-├── data/
-│   └── sample-details.ts   # Sample construction details
-└── styles/
-    └── app.css             # Futuristic dark theme
-```
-
----
-
-## Future Roadmap
-
-### Near Term
-- [ ] Additional construction details (50+)
-- [ ] Detail editor/creator tool
-- [ ] Measurement and dimension tools
-- [ ] Export to CAD formats (DXF, IFC)
-
-### Medium Term
-- [ ] AR placement mode for mobile
-- [ ] VR walkthrough experience
-- [ ] Looking Glass integration
-- [ ] Layer assembly animations
-- [ ] Detail comparison view
-
-### Long Term
-- [ ] Cloud-based detail library
-- [ ] AI-assisted detail generation
-- [ ] BIM integration (Revit, ArchiCAD)
-- [ ] Collaborative viewing sessions
-
----
-
-## Development
-
-### Debug Console Access
-
-```javascript
-// In browser console (F12)
-window.scene       // Three.js scene object
-window.camera      // Perspective camera
-window.renderer    // WebGL renderer
-window.holoRenderer // HolographicRenderer instance
-```
-
-### Adding New Materials
-
-1. Define base material in `materials/base-materials.ts`
-2. Map manufacturer products in `materials/manufacturers.ts`
-3. Add texture generation if needed in `material-factory.ts`
-
-### Adding New Details
-
-1. Add detail to `data/sample-details.ts`
-2. Implement builder method in `semantic-to-mesh.ts` if new category
-
-See `PROJECT_LOG.md` for detailed development notes.
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18, TypeScript, Vite |
+| 3D Rendering | Three.js (r128+ CDN in demo, bundled in SaaS) |
+| Backend | Express 4, Node.js |
+| Database | PostgreSQL (schema-per-tenant) |
+| Auth | JWT (bcryptjs, jsonwebtoken) |
+| State | React Context (Auth, Tenant) |
 
 ---
 
 ## License
 
-Proprietary - Lefebvre Design Solutions / BuildingSystems.ai
+3D BIM Detail Viewer is a trademark of Lefebvre Design Solutions LLC / ValidKernel.
+
+**Dual License:**
+- **Open License (Free):** Public, educational, open-source, and government use. Attribution required.
+- **Commercial License:** Revenue-generating use requires separate commercial license. Contact Lefebvre Design Solutions LLC.
+
+All deployments operate under ValidKernel deterministic trust infrastructure with RuleBind license enforcement and StrictRun execution logging.
 
 ---
 
 ## Author
 
 **Armand Lefebvre**
-Lefebvre Design Solutions
-BuildingSystems.ai
+Lefebvre Design Solutions LLC / ValidKernel
 
----
-
-*Built with semantic compression technology for the future of construction visualization.*
+VALIDKERNEL &copy; 2026 — INFRASTRUCTURE FIRST. BORING BY DESIGN.
