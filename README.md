@@ -139,6 +139,37 @@ holograph_details/
 
 ---
 
+## Build Status
+
+| Component | Description | Status |
+|-----------|-------------|--------|
+| Standalone Demo | `demo/index.html` — zero-dependency Three.js viewer | **Working** |
+| Frontend SaaS | React + Vite with 3D viewer, layer controls, auth | **Ready** |
+| Backend API | Express + PostgreSQL with JWT auth, 14 endpoints | **Ready** |
+| Multi-Tenant DB | Schema-per-tenant PostgreSQL isolation | **Ready** |
+| Auth System | JWT with bcryptjs, role-based (admin/editor/viewer) | **Ready** |
+| Deployment | Railway + Vercel configuration | **Pending** |
+
+**Current Milestone:** Demo working, full SaaS stack ready for deployment.
+
+---
+
+## LDS Ecosystem
+
+This repository is part of the Lefebvre Design Solutions construction technology platform:
+
+| Repository | Description | Status |
+|-----------|-------------|--------|
+| [SUPA-SAINT](https://github.com/jenkintownelectricity/SUPA-SAINT) | Unified GCP/Saint-Gobain Super App (18 entities) | Assembler Phase |
+| [GPC_Shop_Drawings](https://github.com/jenkintownelectricity/GPC_Shop_Drawings) | AI-powered shop drawing production | Alpha Complete |
+| [construction_dna](https://github.com/jenkintownelectricity/construction_dna) | 20-tier material DNA taxonomy | Kernel Ready |
+| [construction_development_scraper](https://github.com/jenkintownelectricity/construction_development_scraper) | Groq-based opportunity discovery | Production |
+| **holograph_details** (this repo) | 3D BIM detail viewer (multi-tenant SaaS) | Demo Ready |
+
+All repositories governed under LDS L0-command architecture with ValidKernel deterministic trust.
+
+---
+
 ## License
 
 3D BIM Detail Viewer is a trademark of Lefebvre Design Solutions LLC / ValidKernel.
@@ -157,3 +188,5 @@ All deployments operate under ValidKernel deterministic trust infrastructure wit
 Lefebvre Design Solutions LLC / ValidKernel
 
 VALIDKERNEL &copy; 2026 — INFRASTRUCTURE FIRST. BORING BY DESIGN.
+
+*Last Updated: 2026-02-15*
